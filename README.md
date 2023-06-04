@@ -27,3 +27,6 @@ Developer mailing list: https://groups.io/g/termux-dev
 General chat: https://gitter.im/termux/termux or #termux on IRC/libera.chat.
 
 Developer chat: https://gitter.im/termux/dev.
+set http_proxy=http://127.0.0.1:7890
+set https_proxy=http://127.0.0.1:7890
+/home/builder/.termux-build/_buildall-aarch64/buildorder.txt

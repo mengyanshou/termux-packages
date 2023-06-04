@@ -1,7 +1,7 @@
 #!/bin/bash
 # build-all.sh - script to build all packages with a build order specified by buildorder.py
 
-set -e -u -o pipefail
+# set -e -u -o pipefail
 
 TERMUX_SCRIPTDIR=$(cd "$(realpath "$(dirname "$0")")"; pwd)
 
@@ -54,7 +54,8 @@ BUILDSCRIPT=$(dirname "$0")/build-package.sh
 BUILDALL_DIR=$TERMUX_TOPDIR/_buildall-$TERMUX_ARCH
 BUILDORDER_FILE=$BUILDALL_DIR/buildorder.txt
 BUILDSTATUS_FILE=$BUILDALL_DIR/buildstatus.txt
-
+echo $BUILDSTATUS_FILE
+# exit
 if [ -e "$BUILDORDER_FILE" ]; then
 	echo "Using existing buildorder file: $BUILDORDER_FILE"
 else
@@ -72,6 +73,11 @@ trap 'echo ERROR: See $BUILDALL_DIR/${PKG}.err' ERR
 while read -r PKG PKG_DIR; do
 	# Check build status (grepping is a bit crude, but it works)
 	if [ -e "$BUILDSTATUS_FILE" ] && grep "^$PKG\$" "$BUILDSTATUS_FILE" >/dev/null; then
+		echo "Skipping $PKG"
+		continue
+	fi
+	# 如果是 termux-x11-nightly、procyon-decompiler则跳过
+	if [[ "$PKG" =~ ^(termux-x11-nightly|procyon-decompiler)$ ]]; then
 		echo "Skipping $PKG"
 		continue
 	fi
