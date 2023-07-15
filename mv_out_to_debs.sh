@@ -1,0 +1,1 @@
+mv output/* debs/
