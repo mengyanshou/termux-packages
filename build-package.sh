@@ -11,7 +11,9 @@ export TMPDIR
 if [[ ! "$TERMUX_BUILD_PACKAGE_CALL_DEPTH" =~ ^[0-9]+$ ]]; then
 	export TERMUX_BUILD_PACKAGE_CALL_DEPTH=0
 	export TERMUX_BUILD_PACKAGE_CALL_BUILT_PACKAGES_LIST_FILE_PATH="${TMPDIR}/build-package-call-built-packages-list-$(date +"%Y-%m-%d-%H.%M.%S.")$((RANDOM%1000))"
+	export TERMUX_BUILD_PACKAGE_CALL_BUILDING_PACKAGES_LIST_FILE_PATH="${TMPDIR}/build-package-call-building-packages-list-$(date +"%Y-%m-%d-%H.%M.%S.")$((RANDOM%1000))"
 	echo -n " " > "$TERMUX_BUILD_PACKAGE_CALL_BUILT_PACKAGES_LIST_FILE_PATH"
+	touch "$TERMUX_BUILD_PACKAGE_CALL_BUILDING_PACKAGES_LIST_FILE_PATH"
 else
 	export TERMUX_BUILD_PACKAGE_CALL_DEPTH=$((TERMUX_BUILD_PACKAGE_CALL_DEPTH+1))
 fi
@@ -57,7 +59,8 @@ if [ ! -e "$TERMUX_BUILD_LOCK_FILE" ]; then
 	touch "$TERMUX_BUILD_LOCK_FILE"
 fi
 
-export TERMUX_PACKAGES_DIRECTORIES=$(jq --raw-output 'keys | .[]' ${TERMUX_SCRIPTDIR}/repo.json)
+export TERMUX_PACKAGES_DIRECTORIES=$(jq --raw-output 'del(.pkg_format) | keys | .[]' ${TERMUX_SCRIPTDIR}/repo.json)
+export TERMUX_REPO_PKG_FORMAT=$(jq --raw-output '.pkg_format // "debian"' ${TERMUX_SCRIPTDIR}/repo.json)
 
 # Special variable for internal use. It forces script to ignore
 # lock file.
@@ -71,9 +74,21 @@ source "$TERMUX_SCRIPTDIR/scripts/build/termux_error_exit.sh"
 # shellcheck source=scripts/build/termux_download.sh
 source "$TERMUX_SCRIPTDIR/scripts/build/termux_download.sh"
 
+# Installing packages if necessary for the full operation of CGCT.
+# shellcheck source=scripts/build/termux_step_setup_cgct_environment.sh
+source "$TERMUX_SCRIPTDIR/scripts/build/termux_step_setup_cgct_environment.sh"
+
 # Utility function for setting up Cargo C-ABI helpers.
 # shellcheck source=scripts/build/setup/termux_setup_cargo_c.sh
 source "$TERMUX_SCRIPTDIR/scripts/build/setup/termux_setup_cargo_c.sh"
+
+# Utility function for setting up Crystal toolchain.
+# shellcheck source=scripts/build/setup/termux_setup_crystal.sh
+source "$TERMUX_SCRIPTDIR/scripts/build/setup/termux_setup_crystal.sh"
+
+# Utility function for setting up Flang toolchain.
+# shellcheck source=scripts/build/setup/termux_setup_flang.sh
+source "$TERMUX_SCRIPTDIR/scripts/build/setup/termux_setup_flang.sh"
 
 # Utility function for setting up GHC toolchain.
 # shellcheck source=scripts/build/setup/termux_setup_ghc.sh
@@ -119,6 +134,10 @@ source "$TERMUX_SCRIPTDIR/scripts/build/setup/termux_setup_rust.sh"
 # Utility function for swift-using packages to setup a swift toolchain
 # shellcheck source=scripts/build/setup/termux_setup_swift.sh
 source "$TERMUX_SCRIPTDIR/scripts/build/setup/termux_setup_swift.sh"
+
+# Utility function to setup a current xmake build system.
+# shellcheck source=scripts/build/setup/termux_setup_xmake.sh
+source "$TERMUX_SCRIPTDIR/scripts/build/setup/termux_setup_xmake.sh"
 
 # Utility function for zig-using packages to setup a zig toolchain.
 # shellcheck source=scripts/build/setup/termux_setup_zig.sh
@@ -219,13 +238,17 @@ source "$TERMUX_SCRIPTDIR/scripts/build/termux_step_handle_hostbuild.sh"
 # shellcheck source=scripts/build/termux_step_host_build.sh
 source "$TERMUX_SCRIPTDIR/scripts/build/termux_step_host_build.sh"
 
-# Setup a standalone Android NDK 25c toolchain. Called from termux_step_setup_toolchain.
-# shellcheck source=scripts/build/toolchain/termux_setup_toolchain_25c.sh
-source "$TERMUX_SCRIPTDIR/scripts/build/toolchain/termux_setup_toolchain_25c.sh"
+# Setup a standalone Android NDK toolchain. Called from termux_step_setup_toolchain.
+# shellcheck source=scripts/build/toolchain/termux_setup_toolchain_26b.sh
+source "$TERMUX_SCRIPTDIR/scripts/build/toolchain/termux_setup_toolchain_26b.sh"
 
 # Setup a standalone Android NDK 23c toolchain. Called from termux_step_setup_toolchain.
 # shellcheck source=scripts/build/toolchain/termux_setup_toolchain_23c.sh
 source "$TERMUX_SCRIPTDIR/scripts/build/toolchain/termux_setup_toolchain_23c.sh"
+
+# Setup a standalone Glibc GNU toolchain. Called from termux_step_setup_toolchain.
+# shellcheck source=scripts/build/toolchain/termux_setup_toolchain_gnu.sh
+source "$TERMUX_SCRIPTDIR/scripts/build/toolchain/termux_setup_toolchain_gnu.sh"
 
 # Runs termux_step_setup_toolchain_${TERMUX_NDK_VERSION}. Not to be overridden by packages.
 # shellcheck source=scripts/build/termux_step_setup_toolchain.sh
@@ -369,6 +392,13 @@ termux_add_package_to_built_packages_list() {
 	fi
 }
 
+# Check if the package is in the compiling list
+termux_check_package_in_building_packages_list() {
+	[ ! -f "$TERMUX_BUILD_PACKAGE_CALL_BUILDING_PACKAGES_LIST_FILE_PATH" ] && termux_error_exit "ERROR: file '$TERMUX_BUILD_PACKAGE_CALL_BUILDING_PACKAGES_LIST_FILE_PATH' not found."
+	grep -q "^${1}$" "$TERMUX_BUILD_PACKAGE_CALL_BUILDING_PACKAGES_LIST_FILE_PATH"
+	return $?
+}
+
 # Special hook to prevent use of "sudo" inside package build scripts.
 # build-package.sh shouldn't perform any privileged operations.
 sudo() {
@@ -388,10 +418,13 @@ _show_usage() {
 	echo "  -F Force build even if package and its dependencies have already been built."
 	[ "$TERMUX_ON_DEVICE_BUILD" = "false" ] && echo "  -i Download and extract dependencies instead of building them."
 	echo "  -I Download and extract dependencies instead of building them, keep existing $TERMUX_BASE_DIR files."
+	echo "  -L The package and its dependencies will be based on the same library."
 	echo "  -q Quiet build."
+	echo "  -w Install dependencies without version binding."
 	echo "  -s Skip dependency check."
 	echo "  -o Specify directory where to put built packages. Default: output/."
 	echo "  --format Specify package output format (debian, pacman)."
+	echo "  --library Specify library of package (bionic, glibc)."
 	exit 1
 }
 
@@ -411,6 +444,17 @@ while (($# >= 1)); do
 				export TERMUX_PACKAGE_FORMAT="$1"
 			else
 				termux_error_exit "./build-package.sh: option '--format' requires an argument"
+			fi
+			;;
+		--library)
+			if [ $# -ge 2 ]; then
+				shift
+				if [ -z "$1" ]; then
+					termux_error_exit "./build-package.sh: argument to '--library' should not be empty"
+				fi
+				export TERMUX_PACKAGE_LIBRARY="$1"
+			else
+				termux_error_exit "./build-package.sh: option '--library' requires an argument"
 			fi
 			;;
 		-a)
@@ -449,7 +493,9 @@ while (($# >= 1)); do
 				export TERMUX_NO_CLEAN=true
 			fi
 			;;
+		-L) export TERMUX_GLOBAL_LIBRARY=true;;
 		-q) export TERMUX_QUIET_BUILD=true;;
+		-w) export TERMUX_WITHOUT_DEPVERSION_BINDING=true;;
 		-s) export TERMUX_SKIP_DEPCHECK=true;;
 		-o)
 			if [ $# -ge 2 ]; then
@@ -477,6 +523,10 @@ if [ "$TERMUX_REPO_PACKAGE" != "$TERMUX_APP_PACKAGE" ]; then
 	TERMUX_INSTALL_DEPS=false
 fi
 
+if [ "$TERMUX_REPO_PKG_FORMAT" != "debian" ] && [ "$TERMUX_REPO_PKG_FORMAT" != "pacman" ]; then
+	termux_error_exit "'pkg_format' is incorrectly specified in repo.json file. Only 'debian' and 'pacman' formats are supported"
+fi
+
 if [ -n "${TERMUX_PACKAGE_FORMAT-}" ]; then
 	case "${TERMUX_PACKAGE_FORMAT-}" in
 		debian|pacman) :;;
@@ -484,7 +534,14 @@ if [ -n "${TERMUX_PACKAGE_FORMAT-}" ]; then
 	esac
 fi
 
-if [ "${TERMUX_INSTALL_DEPS-false}" = "true" ]; then
+if [ -n "${TERMUX_PACKAGE_LIBRARY-}" ]; then
+	case "${TERMUX_PACKAGE_LIBRARY-}" in
+		bionic|glibc) :;;
+		*) termux_error_exit "Unsupported library \"${TERMUX_PACKAGE_LIBRARY-}\". Only 'bionic' and 'glibc' library are supported";;
+	esac
+fi
+
+if [ "${TERMUX_INSTALL_DEPS-false}" = "true" ] || [ "${TERMUX_PACKAGE_LIBRARY-bionic}" = "glibc" ]; then
 	# Setup PGP keys for verifying integrity of dependencies.
 	# Keys are obtained from our keyring package.
 	gpg --list-keys 2C7F29AE97891F6419A9E2CDB0076E490B71616B > /dev/null 2>&1 || {
@@ -494,6 +551,10 @@ if [ "${TERMUX_INSTALL_DEPS-false}" = "true" ]; then
 	gpg --list-keys CC72CF8BA7DBFA0182877D045A897D96E57CF20C > /dev/null 2>&1 || {
 		gpg --import "$TERMUX_SCRIPTDIR/packages/termux-keyring/termux-autobuilds.gpg"
 		gpg --no-tty --command-file <(echo -e "trust\n5\ny")  --edit-key CC72CF8BA7DBFA0182877D045A897D96E57CF20C
+	}
+	gpg --list-keys 998DE27318E867EA976BA877389CEED64573DFCA > /dev/null 2>&1 || {
+		gpg --import "$TERMUX_SCRIPTDIR/packages/termux-keyring/termux-pacman.gpg"
+		gpg --no-tty --command-file <(echo -e "trust\n5\ny")  --edit-key 998DE27318E867EA976BA877389CEED64573DFCA
 	}
 fi
 
@@ -514,7 +575,10 @@ for ((i=0; i<${#PACKAGE_LIST[@]}; i++)); do
 				env TERMUX_ARCH="$arch" TERMUX_BUILD_IGNORE_LOCK=true ./build-package.sh \
 					${TERMUX_FORCE_BUILD+-f} ${TERMUX_INSTALL_DEPS+-i} ${TERMUX_IS_DISABLED+-D} \
 					${TERMUX_DEBUG_BUILD+-d} ${TERMUX_OUTPUT_DIR+-o $TERMUX_OUTPUT_DIR} \
-					--format ${TERMUX_PACKAGE_FORMAT:=debian} "${PACKAGE_LIST[i]}"
+					${TERMUX_FORCE_BUILD_DEPENDENCIES+-F} ${TERMUX_GLOBAL_LIBRARY+-L} \
+					${TERMUX_WITHOUT_DEPVERSION_BINDING+-w} \
+					--format ${TERMUX_PACKAGE_FORMAT:=debian} \
+					--library ${TERMUX_PACKAGE_LIBRARY:=bionic} "${PACKAGE_LIST[i]}"
 			done
 			exit
 		fi
@@ -555,8 +619,15 @@ for ((i=0; i<${#PACKAGE_LIST[@]}; i++)); do
 
 		termux_step_start_build
 
+		if ! termux_check_package_in_building_packages_list "$TERMUX_PKG_NAME"; then
+			echo "$TERMUX_PKG_NAME" >> $TERMUX_BUILD_PACKAGE_CALL_BUILDING_PACKAGES_LIST_FILE_PATH
+		fi
+
 		if [ "$TERMUX_CONTINUE_BUILD" == "false" ]; then
 			termux_step_get_dependencies
+			if [ "$TERMUX_PACKAGE_LIBRARY" = "glibc" ]; then
+				termux_step_setup_cgct_environment
+			fi
 			termux_step_override_config_scripts
 		fi
 
@@ -600,7 +671,7 @@ for ((i=0; i<${#PACKAGE_LIST[@]}; i++)); do
 		cd "$TERMUX_PKG_MASSAGEDIR"
 		termux_step_extract_into_massagedir
 		termux_step_massage
-		cd "$TERMUX_PKG_MASSAGEDIR/$TERMUX_PREFIX"
+		cd "$TERMUX_PKG_MASSAGEDIR/$TERMUX_PREFIX_CLASSICAL"
 		termux_step_post_massage
 		cd "$TERMUX_PKG_MASSAGEDIR"
 		if [ "$TERMUX_PACKAGE_FORMAT" = "debian" ]; then
@@ -611,6 +682,9 @@ for ((i=0; i<${#PACKAGE_LIST[@]}; i++)); do
 			termux_error_exit "Unknown packaging format '$TERMUX_PACKAGE_FORMAT'."
 		fi
 		# Saving a list of compiled packages for further work with it
+		if termux_check_package_in_building_packages_list "$TERMUX_PKG_NAME"; then
+			sed -i "/^${TERMUX_PKG_NAME}$/d" "$TERMUX_BUILD_PACKAGE_CALL_BUILDING_PACKAGES_LIST_FILE_PATH"
+		fi
 		termux_add_package_to_built_packages_list "$TERMUX_PKG_NAME"
 		termux_step_finish_build
 	) 5< "$TERMUX_BUILD_LOCK_FILE"
@@ -619,4 +693,5 @@ done
 # Removing a file to store a list of compiled packages
 if [ "$TERMUX_BUILD_PACKAGE_CALL_DEPTH" = "0" ]; then
 	rm "$TERMUX_BUILD_PACKAGE_CALL_BUILT_PACKAGES_LIST_FILE_PATH"
+	rm "$TERMUX_BUILD_PACKAGE_CALL_BUILDING_PACKAGES_LIST_FILE_PATH"
 fi

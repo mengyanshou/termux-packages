@@ -2,32 +2,74 @@ TERMUX_PKG_HOMEPAGE=https://developer.gnome.org/glib/
 TERMUX_PKG_DESCRIPTION="Library providing core building blocks for libraries and applications written in C"
 TERMUX_PKG_LICENSE="LGPL-2.1"
 TERMUX_PKG_MAINTAINER="@termux"
-_MAJOR_VERSION=2.76
-TERMUX_PKG_VERSION=${_MAJOR_VERSION}.3
-TERMUX_PKG_SRCURL=https://ftp.gnome.org/pub/gnome/sources/glib/${_MAJOR_VERSION}/glib-${TERMUX_PKG_VERSION}.tar.xz
-TERMUX_PKG_SHA256=c0be444e403d7c3184d1f394f89f0b644710b5e9331b54fa4e8b5037813ad32a
+TERMUX_PKG_VERSION="2.78.4"
+TERMUX_PKG_SRCURL=https://ftp.gnome.org/pub/gnome/sources/glib/${TERMUX_PKG_VERSION%.*}/glib-${TERMUX_PKG_VERSION}.tar.xz
+TERMUX_PKG_SHA256=24b8e0672dca120cc32d394bccb85844e732e04fe75d18bb0573b2dbc7548f63
+TERMUX_PKG_AUTO_UPDATE=true
 TERMUX_PKG_DEPENDS="libandroid-support, libffi, libiconv, pcre2, resolv-conf, zlib"
 TERMUX_PKG_BREAKS="glib-dev"
 TERMUX_PKG_REPLACES="glib-dev"
-
 TERMUX_PKG_EXTRA_CONFIGURE_ARGS="
 -Druntime_dir=$TERMUX_PREFIX/var/run
 -Dlibmount=disabled
 "
-
 TERMUX_PKG_RM_AFTER_INSTALL="
+bin/glib-gettextize
+bin/gtester-report
 lib/locale
 share/gdb/auto-load
 share/glib-2.0/gdb
 share/glib-2.0/gettext
 share/gtk-doc
-bin/gtester-report
-bin/glib-gettextize
 "
+TERMUX_PKG_HOSTBUILD=true
+TERMUX_PKG_EXTRA_HOSTBUILD_CONFIGURE_ARGS="
+-Ddefault_library=static
+-Dlibmount=disabled
+-Dtests=false
+--prefix ${TERMUX_PREFIX}/opt/${TERMUX_PKG_NAME}/cross
+"
+TERMUX_PKG_NO_SHEBANG_FIX_FILES="
+opt/glib/cross/bin/gdbus-codegen
+opt/glib/cross/bin/glib-genmarshal
+opt/glib/cross/bin/glib-gettextize
+opt/glib/cross/bin/glib-mkenums
+opt/glib/cross/bin/gtester-report
+"
+
+termux_step_host_build() {
+	if [[ "${TERMUX_ON_DEVICE_BUILD}" == "true" ]]; then return; fi
+
+	# XXX: termux_setup_meson is not expected to be called in host build
+	AR=;CC=;CFLAGS=;CPPFLAGS=;CXX=;CXXFLAGS=;LD=;LDFLAGS=;PKG_CONFIG=;STRIP=
+	termux_setup_meson
+	unset AR CC CFLAGS CPPFLAGS CXX CXXFLAGS LD LDFLAGS PKG_CONFIG STRIP
+
+	${TERMUX_MESON} ${TERMUX_PKG_SRCDIR} . \
+		${TERMUX_PKG_EXTRA_HOSTBUILD_CONFIGURE_ARGS}
+	ninja -j "${TERMUX_MAKE_PROCESSES}" install
+
+	# termux_step_massage strip does not cover opt dir
+	find "${TERMUX_PREFIX}/opt" \
+		-path "*/glib/cross/bin/*" \
+		-type f -print0 | \
+		xargs -0 -r file | grep -E "ELF .+ (executable|shared object)" | \
+		cut -d":" -f1 | xargs -r strip --strip-unneeded --preserve-dates
+}
 
 termux_step_pre_configure() {
 	# glib checks for __BIONIC__ instead of __ANDROID__:
 	CFLAGS+=" -D__BIONIC__=1"
+}
+
+termux_step_post_make_install() {
+	local pc_files=$(ls "${TERMUX_PREFIX}/opt/glib/cross/lib/x86_64-linux-gnu/pkgconfig")
+	for pc in ${pc_files}; do
+		echo "INFO: Patching cross pkgconfig ${pc}"
+		sed "s|\${bindir}|${TERMUX_PREFIX}/opt/glib/cross/bin|g" \
+			"${TERMUX_PREFIX}/lib/pkgconfig/${pc}" \
+			> "${TERMUX_PREFIX}/opt/glib/cross/lib/x86_64-linux-gnu/pkgconfig/${pc}"
+	done
 }
 
 termux_step_create_debscripts() {

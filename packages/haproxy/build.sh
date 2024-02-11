@@ -2,14 +2,18 @@ TERMUX_PKG_HOMEPAGE=https://www.haproxy.org/
 TERMUX_PKG_DESCRIPTION="The Reliable, High Performance TCP/HTTP Load Balancer"
 TERMUX_PKG_LICENSE="GPL-2.0, LGPL-2.1"
 TERMUX_PKG_MAINTAINER="@termux"
-_MAJOR_VERSION=2.4
-TERMUX_PKG_VERSION=${_MAJOR_VERSION}.23
-TERMUX_PKG_SRCURL=https://www.haproxy.org/download/${_MAJOR_VERSION}/src/haproxy-${TERMUX_PKG_VERSION}.tar.gz
-TERMUX_PKG_SHA256=d271d554f2ae5554f2ae720b0b0bc154d1c3e8fe7797c215bd05422dd2b4d383
+TERMUX_PKG_VERSION="2.9.4"
+TERMUX_PKG_SRCURL=https://www.haproxy.org/download/${TERMUX_PKG_VERSION%.*}/src/haproxy-${TERMUX_PKG_VERSION}.tar.gz
+TERMUX_PKG_SHA256=9c3892cc3c084ac4f00125ef22a151cf181416d84aa8a37af6af6aa0399096bc
+TERMUX_PKG_AUTO_UPDATE=true
 TERMUX_PKG_DEPENDS="liblua53, openssl, pcre2, zlib"
 TERMUX_PKG_BUILD_IN_SRC=true
 
 TERMUX_PKG_CONFFILES="etc/haproxy/haproxy.cfg"
+
+termux_step_pre_configure() {
+	CFLAGS+=" -fwrapv"
+}
 
 termux_step_make() {
 	CC="$CC -Wl,-rpath=$TERMUX_PREFIX/lib -Wl,--enable-new-dtags"

@@ -1,5 +1,10 @@
 # shellcheck shell=bash
 termux_pkg_auto_update() {
+	if [[ -n "${__CACHED_TAG:-}" ]]; then
+		termux_pkg_upgrade_version ${__CACHED_TAG}
+		return $?
+	fi
+	
 	local project_host
 	project_host="$(echo "${TERMUX_PKG_SRCURL}" | cut -d"/" -f3)"
 
@@ -32,10 +37,6 @@ configured to use ${TERMUX_PKG_UPDATE_METHOD}'s method."
 		fi
 		;;
 	repology)
-		# https://github.com/termux/termux-packages/issues/14544
-		echo "WARNING: repology update method is currently disabled due to network error."
-		return 0
-		#
 		termux_repology_auto_update
 		;;
 	*)

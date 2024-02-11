@@ -2,9 +2,10 @@ TERMUX_PKG_HOMEPAGE=https://github.com/lu-zero/cargo-c
 TERMUX_PKG_DESCRIPTION="Cargo C-ABI helpers"
 TERMUX_PKG_LICENSE="MIT"
 TERMUX_PKG_MAINTAINER="@termux"
-TERMUX_PKG_VERSION=0.9.20
+TERMUX_PKG_VERSION="0.9.30"
 TERMUX_PKG_SRCURL=https://github.com/lu-zero/cargo-c/archive/refs/tags/v${TERMUX_PKG_VERSION}.tar.gz
-TERMUX_PKG_SHA256=6a89125c4b59279e73f977ef8a7aa5d83240bdf5d1d7ef1a53b8d1f2201a5f41
+TERMUX_PKG_SHA256=174cfc3a69263c3e54b95e00c4bd61b13377f7f72d4bf60aa714fd9e7ed3849c
+TERMUX_PKG_AUTO_UPDATE=true
 TERMUX_PKG_DEPENDS="libcurl, libgit2, libssh2, openssl, zlib"
 TERMUX_PKG_BUILD_IN_SRC=true
 
@@ -35,6 +36,10 @@ termux_step_pre_configure() {
 		$_CARGO_TARGET_LIBDIR/libz.so.1
 	ln -sfT $(readlink -f $TERMUX_PREFIX/lib/libz.so.tmp) \
 		$_CARGO_TARGET_LIBDIR/libz.so
+
+	if [[ "${TERMUX_ARCH}" == "x86_64" ]]; then
+		RUSTFLAGS+=" -C link-arg=$($CC -print-libgcc-file-name)"
+	fi
 }
 
 termux_step_post_make_install() {

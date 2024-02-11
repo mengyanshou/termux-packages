@@ -1,6 +1,5 @@
-diff -uNr firefox-105.0.3/ipc/chromium/src/base/shared_memory_posix.cc firefox-105.0.3.mod/ipc/chromium/src/base/shared_memory_posix.cc
---- firefox-105.0.3/ipc/chromium/src/base/shared_memory_posix.cc	2022-10-08 00:25:40.000000000 +0900
-+++ firefox-105.0.3.mod/ipc/chromium/src/base/shared_memory_posix.cc	2022-10-17 19:18:56.056807327 +0900
+--- a/ipc/chromium/src/base/shared_memory_posix.cc
++++ b/ipc/chromium/src/base/shared_memory_posix.cc
 @@ -40,6 +40,65 @@
  #include "mozilla/UniquePtrExtensions.h"
  #include "prenv.h"
@@ -70,7 +69,7 @@ diff -uNr firefox-105.0.3/ipc/chromium/src/base/shared_memory_posix.cc firefox-1
 @@ -153,7 +212,7 @@
  // FreeBSD in version 13.
  
- #  if !defined(HAVE_MEMFD_CREATE) && defined(OS_LINUX) && \
+ #  if !defined(HAVE_MEMFD_CREATE) && defined(XP_LINUX) && \
 -      defined(SYS_memfd_create)
 +      defined(SYS_memfd_create) && !defined(__TERMUX__)
  

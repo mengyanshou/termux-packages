@@ -2,9 +2,10 @@ TERMUX_PKG_HOMEPAGE=https://www.lesbonscomptes.com/recoll/index.html
 TERMUX_PKG_DESCRIPTION="Full-text search for your desktop"
 TERMUX_PKG_LICENSE="GPL-2.0"
 TERMUX_PKG_MAINTAINER="@termux"
-TERMUX_PKG_VERSION=1.34.6
+TERMUX_PKG_VERSION="1.37.4"
 TERMUX_PKG_SRCURL=https://www.lesbonscomptes.com/recoll/recoll-${TERMUX_PKG_VERSION}.tar.gz
-TERMUX_PKG_SHA256=e39587d12370df92e4ac951429d0bb805662d7417d4dbcd41e92389b165e9fb8
+TERMUX_PKG_SHA256=3109d76a65bb2f887231b643994ed701c2efe6ba0771f8451b39e2f186c3b6ad
+TERMUX_PKG_AUTO_UPDATE=true
 TERMUX_PKG_DEPENDS="aspell, file, libc++, libiconv, libxapian, libxml2, libxslt, zlib"
 TERMUX_PKG_PYTHON_COMMON_DEPS="wheel"
 TERMUX_PKG_EXTRA_CONFIGURE_ARGS="
@@ -26,12 +27,4 @@ termux_step_pre_configure() {
 	sed "s|@PYTHON_VERSION@|${TERMUX_PYTHON_VERSION}|g" \
 		$TERMUX_PKG_BUILDER_DIR/python-recoll-setup.py.in.diff \
 		| patch --silent -p1
-}
-
-termux_step_post_massage() {
-	# Regression test for https://github.com/termux/termux-packages/issues/14293
-	if ! readelf -d bin/recollindex | grep -E -q \
-		'\(RUNPATH\).*(\[|:)'"${TERMUX_PREFIX//./\\.}"'/lib/recoll(:|\])'; then
-		termux_error_exit "RUNPATH for recollindex is not properly set."
-	fi
 }

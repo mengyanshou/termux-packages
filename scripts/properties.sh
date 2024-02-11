@@ -9,16 +9,16 @@ TERMUX_ANDROID_BUILD_TOOLS_VERSION=33.0.1
 # change TERMUX_PKG_VERSION (and remove TERMUX_PKG_REVISION if necessary) in:
 #   apksigner, d8
 # and trigger rebuild of them
-: "${TERMUX_NDK_VERSION_NUM:="25"}"
-: "${TERMUX_NDK_REVISION:="c"}"
+: "${TERMUX_NDK_VERSION_NUM:="26"}"
+: "${TERMUX_NDK_REVISION:="b"}"
 TERMUX_NDK_VERSION=$TERMUX_NDK_VERSION_NUM$TERMUX_NDK_REVISION
 # when changing the above:
 # update version and hashsum in packages
-#   libc++, ndk-multilib, ndk-sysroot, vulkan-loader-android
+#   libandroid-stub, libc++, ndk-multilib, ndk-sysroot, vulkan-loader-android
 # and update SHA256 sums in scripts/setup-android-sdk.sh
 # check all packages build and run correctly and bump if needed
 
-: "${TERMUX_JAVA_HOME:=/usr/lib/jvm/java-8-openjdk-amd64}"
+: "${TERMUX_JAVA_HOME:=/usr/lib/jvm/java-17-openjdk-amd64}"
 export JAVA_HOME=${TERMUX_JAVA_HOME}
 
 if [ "${TERMUX_PACKAGES_OFFLINE-false}" = "true" ]; then
@@ -35,7 +35,11 @@ TERMUX_BASE_DIR="/data/data/${TERMUX_APP_PACKAGE}/files"
 TERMUX_CACHE_DIR="/data/data/${TERMUX_APP_PACKAGE}/cache"
 TERMUX_ANDROID_HOME="${TERMUX_BASE_DIR}/home"
 TERMUX_APPS_DIR="${TERMUX_BASE_DIR}/apps"
-TERMUX_PREFIX="${TERMUX_BASE_DIR}/usr"
+TERMUX_PREFIX_CLASSICAL="${TERMUX_BASE_DIR}/usr"
+TERMUX_PREFIX="${TERMUX_PREFIX_CLASSICAL}"
+
+# Path to CGCT tools
+export CGCT_DIR="/data/data/${TERMUX_APP_PACKAGE}/cgct"
 
 # Package name for the packages hosted on the repo.
 # This must only equal TERMUX_APP_PACKAGE if using custom repo that
@@ -47,13 +51,13 @@ TERMUX_REPO_URL=()
 TERMUX_REPO_DISTRIBUTION=()
 TERMUX_REPO_COMPONENT=()
 
-for url in $(jq -r '.[] | .url' ${TERMUX_SCRIPTDIR}/repo.json); do
+for url in $(jq -r 'del(.pkg_format) | .[] | .url' ${TERMUX_SCRIPTDIR}/repo.json); do
 	TERMUX_REPO_URL+=("$url")
 done
-for distribution in $(jq -r '.[] | .distribution' ${TERMUX_SCRIPTDIR}/repo.json); do
+for distribution in $(jq -r 'del(.pkg_format) | .[] | .distribution' ${TERMUX_SCRIPTDIR}/repo.json); do
 	TERMUX_REPO_DISTRIBUTION+=("$distribution")
 done
-for component in $(jq -r '.[] | .component' ${TERMUX_SCRIPTDIR}/repo.json); do
+for component in $(jq -r 'del(.pkg_format) | .[] | .component' ${TERMUX_SCRIPTDIR}/repo.json); do
 	TERMUX_REPO_COMPONENT+=("$component")
 done
 

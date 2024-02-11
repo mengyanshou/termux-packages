@@ -3,15 +3,18 @@ TERMUX_PKG_DESCRIPTION="Lisp interpreter and application server framework"
 TERMUX_PKG_LICENSE="MIT"
 TERMUX_PKG_LICENSE_FILE="COPYING"
 TERMUX_PKG_MAINTAINER="@termux"
-TERMUX_PKG_VERSION=23.3
+TERMUX_PKG_VERSION="23.12"
 TERMUX_PKG_SRCURL=https://deb.debian.org/debian/pool/main/p/picolisp/picolisp_${TERMUX_PKG_VERSION}.orig.tar.gz
-TERMUX_PKG_SHA256=5d322a97fa67d0d5a94e0cf989ace2bc7dd09f04985f4b2e0f0e6aceacbe2983
+TERMUX_PKG_SHA256=a0633c191c813ae7e6b595713b68979273ddd68c4b6508a2fdb02f0c7bb60aae
+TERMUX_PKG_AUTO_UPDATE=true
 TERMUX_PKG_DEPENDS="libcrypt, libffi, openssl, readline"
 TERMUX_PKG_BUILD_IN_SRC=true
 # For 32-bit archs we nees to build minipicolisp
 TERMUX_PKG_BLACKLISTED_ARCHES="arm, i686"
 
 termux_step_make() {
+	sed -i "s|/usr/lib/picolisp/lib.l|${TERMUX_PREFIX}/lib/picolisp/lib.l|" $TERMUX_PKG_SRCDIR/bin/pil
+	sed -i "s|/usr/lib/picolisp/lib.l|${TERMUX_PREFIX}/lib/picolisp/lib.l|" $TERMUX_PKG_SRCDIR/bin/vip
 	cd $TERMUX_PKG_SRCDIR/src
 	$CC -O3 -c -emit-llvm base.ll
 	$CC -O3 -w -c -D_OS="\"Android\"" -D_CPU="\"$TERMUX_ARCH\"" `$PKGCONFIG --cflags libffi` -emit-llvm lib.c

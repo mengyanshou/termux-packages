@@ -2,13 +2,14 @@ TERMUX_PKG_HOMEPAGE=https://gitlab.com/volian/nala
 TERMUX_PKG_DESCRIPTION="Commandline frontend for the apt package manager"
 TERMUX_PKG_LICENSE="GPL-3.0"
 TERMUX_PKG_MAINTAINER="@termux"
-TERMUX_PKG_VERSION="0.13.0"
+TERMUX_PKG_VERSION="0.15.1"
 TERMUX_PKG_SRCURL=https://gitlab.com/volian/nala/-/archive/v${TERMUX_PKG_VERSION}/nala-v${TERMUX_PKG_VERSION}.tar.bz2
-TERMUX_PKG_SHA256=0ea788e8386b77c67030bdd68f8143fa235cc1c47d1922ea9b36224fe269568d
+TERMUX_PKG_SHA256=04f19bfa94915d5e7ee7c58dadc569cfb3dd311bb8a94c3557655a760e0b7271
 TERMUX_PKG_DEPENDS="python-apt, python-pip"
 TERMUX_PKG_PLATFORM_INDEPENDENT=true
 TERMUX_PKG_BUILD_IN_SRC=true
 TERMUX_PKG_AUTO_UPDATE=true
+TERMUX_PKG_UPDATE_TAG_TYPE="newest-tag"
 TERMUX_PKG_PYTHON_COMMON_DEPS="poetry"
 TERMUX_PKG_PYTHON_TARGET_DEPS="anyio, httpx, jsbeautifier, pexpect, python-debian, rich, tomli, typer, typing-extensions"
 

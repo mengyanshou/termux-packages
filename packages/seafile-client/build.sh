@@ -4,12 +4,12 @@ TERMUX_PKG_DESCRIPTION="Seafile is a file syncing and sharing software with file
 TERMUX_PKG_LICENSE="GPL-2.0"
 TERMUX_PKG_LICENSE_FILE="LICENSE.txt"
 TERMUX_PKG_MAINTAINER="@termux"
-TERMUX_PKG_VERSION=9.0.2
+TERMUX_PKG_VERSION=9.0.4
 TERMUX_PKG_SRCURL=https://github.com/haiwen/seafile/archive/v${TERMUX_PKG_VERSION}.tar.gz
-TERMUX_PKG_SHA256=0a7b1063133a7015667515c498df5b9022f306f74b633da1d3166bce77bc6fad
+TERMUX_PKG_SHA256=6374569f05eb6f8d1632fbfc4356754078308e2a0605aed4e798219b4eafbb51
 TERMUX_PKG_AUTO_UPDATE=true
 TERMUX_PKG_UPDATE_METHOD=repology
-TERMUX_PKG_DEPENDS="glib, libcurl, libevent, libjansson, libsearpc, libsqlite, libuuid, openssl, python, zlib"
+TERMUX_PKG_DEPENDS="glib, libcurl, libevent, libjansson, libsearpc, libsqlite, libuuid, libwebsockets, openssl, python, zlib"
 TERMUX_PKG_BREAKS="seafile-client-dev, ccnet"
 TERMUX_PKG_REPLACES="seafile-client-dev, ccnet"
 TERMUX_PKG_BUILD_IN_SRC=true
@@ -17,7 +17,6 @@ TERMUX_PKG_SETUP_PYTHON=true
 TERMUX_PKG_EXTRA_CONFIGURE_ARGS="
 --with-python_prefix=$TERMUX_PREFIX
 "
-
 
 termux_step_pre_configure() {
 	./autogen.sh

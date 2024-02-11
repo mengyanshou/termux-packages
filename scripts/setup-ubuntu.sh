@@ -48,6 +48,7 @@ PACKAGES+=" scons"
 # Used to generate package documentation.
 PACKAGES+=" asciidoc"
 PACKAGES+=" asciidoctor"
+PACKAGES+=" go-md2man"
 PACKAGES+=" groff"
 PACKAGES+=" help2man"
 PACKAGES+=" pandoc"
@@ -58,6 +59,7 @@ PACKAGES+=" python3-sphinx-rtd-theme"
 PACKAGES+=" python3-sphinxcontrib.qthelp"
 PACKAGES+=" scdoc"
 PACKAGES+=" texinfo"
+PACKAGES+=" txt2man"
 PACKAGES+=" xmlto"
 PACKAGES+=" xmltoman"
 
@@ -92,13 +94,11 @@ PACKAGES+=" gegl"
 # Needed by package libidn2.
 PACKAGES+=" gengetopt"
 
-# Needed by package proxmark3-git.
-PACKAGES+=" swig"
-
 # Needed by package dbus-glib.
 PACKAGES+=" libdbus-1-dev"
 
 # Needed by package below.
+PACKAGES+=" clang-15"
 PACKAGES+=" libelf-dev"
 
 # Needed by package ghostscript.
@@ -149,9 +149,9 @@ PACKAGES+=" composer"
 
 # Needed by package rust.
 PACKAGES+=" libssl-dev" # Needed to build Rust
-PACKAGES+=" llvm-14-dev"
-PACKAGES+=" llvm-14-tools"
-PACKAGES+=" clang-14"
+PACKAGES+=" llvm-15-dev"
+PACKAGES+=" llvm-15-tools"
+PACKAGES+=" clang-15"
 
 # Needed for package smalltalk.
 PACKAGES+=" libsigsegv-dev"
@@ -175,14 +175,14 @@ PACKAGES+=" luajit"
 # Needed by libduktape
 PACKAGES+=" bc"
 
-# Java.
-PACKAGES+=" openjdk-8-jdk openjdk-18-jdk"
-
 # needed by ovmf
 PACKAGES+=" libarchive-tools"
 
 # Needed by cavif-rs
 PACKAGES+=" nasm"
+
+# Needed by debianutils
+PACKAGES+=" po4a"
 
 # Needed by dgsh
 PACKAGES+=" rsync"
@@ -294,6 +294,18 @@ PACKAGES+=" libwebp7 libwebp7:i386 libwebp-dev"
 PACKAGES+=" libwebpdemux2 libwebpdemux2:i386"
 PACKAGES+=" libwebpmux3 libwebpmux3:i386"
 
+# Required by wine-stable
+PACKAGES+=" libfreetype-dev:i386"
+
+# Required by CGCT
+PACKAGES+=" libdebuginfod-dev"
+
+# Needed to set up CGCT and also to set up other packages
+PACKAGES+=" patchelf"
+
+# Needed by lldb for python integration
+PACKAGES+=" swig"
+
 # Do not require sudo if already running as root.
 if [ "$(id -u)" = "0" ]; then
 	SUDO=""
@@ -305,6 +317,7 @@ fi
 $SUDO dpkg --add-architecture i386
 # Add ppa repo to be able to get openjdk-17 on ubuntu 22.04
 $SUDO cp $(dirname "$(realpath "$0")")/openjdk-r-ppa.gpg /etc/apt/trusted.gpg.d/
+$SUDO chmod a+r /etc/apt/trusted.gpg.d/openjdk-r-ppa.gpg
 echo "deb https://ppa.launchpadcontent.net/openjdk-r/ppa/ubuntu/ jammy main" | $SUDO tee /etc/apt/sources.list.d/openjdk-r-ubuntu-ppa-jammy.list > /dev/null
 $SUDO apt-get -yq update
 
@@ -322,3 +335,4 @@ echo -e 'LANG="en_US.UTF-8"\nLANGUAGE="en_US:en"\n' | $SUDO tee -a /etc/default/
 . $(dirname "$(realpath "$0")")/properties.sh
 $SUDO mkdir -p $TERMUX_PREFIX
 $SUDO chown -R $(whoami) /data
+$SUDO ln -s /data/data/com.termux/files/usr/opt/bionic-host /system

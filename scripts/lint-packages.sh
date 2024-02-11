@@ -2,7 +2,7 @@
 
 set -e -u
 
-REPO_DIR=$(realpath "$(dirname "$0")/../")
+TERMUX_SCRIPTDIR=$(realpath "$(dirname "$0")/../")
 
 check_package_license() {
 	local pkg_licenses=$1
@@ -19,7 +19,7 @@ check_package_license() {
 			"BSD 3-Clause"|"BSD New"|"BSD Simplified"|BSL-1.0|Bouncy-Castle);;
 			CA-TOSL-1.1|CC0-1.0|CDDL-1.0|CDDL-1.1|CPAL-1.0|CPL-1.0|CPOL);;
 			CPOL-1.02|CUAOFFICE-1.0|CeCILL-1|CeCILL-2|CeCILL-2.1|CeCILL-B);;
-			CeCILL-C|Codehaus|Copyfree|Day|Day-Addendum|ECL2|EPL-1.0|EPL-2.0);;
+			CeCILL-C|Codehaus|Copyfree|curl|Day|Day-Addendum|ECL2|EPL-1.0|EPL-2.0);;
 			EUDATAGRID|EUPL-1.1|EUPL-1.2|Eiffel-2.0|Entessa-1.0);;
 			Facebook-Platform|Fair|Frameworx-1.0|GPL-2.0|GPL-3.0|GPL-3.0-only);;
 			GPL-3.0-or-later|Go|HSQLDB|Historical|IBMPL-1.0|IJG|IPAFont-1.0);;
@@ -114,8 +114,8 @@ lint_package() {
 		# Using API 24 here.
 		TERMUX_PKG_API_LEVEL=24
 
-		if [ -f "$REPO_DIR/scripts/properties.sh" ]; then
-			. "$REPO_DIR/scripts/properties.sh"
+		if [ -f "$TERMUX_SCRIPTDIR/scripts/properties.sh" ]; then
+			. "$TERMUX_SCRIPTDIR/scripts/properties.sh"
 		fi
 
 		. "$package_script"
@@ -195,7 +195,7 @@ lint_package() {
 
 		echo -n "TERMUX_PKG_VERSION: "
 		if [ -n "$TERMUX_PKG_VERSION" ]; then
-			if grep -qiP '^([0-9]+\:)?[0-9][0-9a-z+\-\.]*$' <<< "$TERMUX_PKG_VERSION"; then
+			if grep -qiP '^([0-9]+\:)?[0-9][0-9a-z+\-\.\~]*$' <<< "${TERMUX_PKG_VERSION}"; then
 				echo "PASS"
 			else
 				echo "INVALID (contains characters that are not allowed)"
@@ -462,7 +462,7 @@ linter_main() {
 	if $problems_found; then
 		echo "================================================================"
 		echo
-		echo "A problem has been found in '$(realpath --relative-to="$REPO_DIR" "$package_script")'."
+		echo "A problem has been found in '$(realpath --relative-to="$TERMUX_SCRIPTDIR" "$package_script")'."
 		echo "Checked $package_counter packages before the first error was detected."
 		echo
 		echo "================================================================"
@@ -481,7 +481,7 @@ linter_main() {
 }
 
 if [ $# -eq 0 ]; then
-	for repo_dir in $(jq --raw-output 'keys | .[]' $REPO_DIR/repo.json); do
+	for repo_dir in $(jq --raw-output 'del(.pkg_format) | keys | .[]' $TERMUX_SCRIPTDIR/repo.json); do
 		linter_main $repo_dir/*/build.sh
 	done || exit 1
 else

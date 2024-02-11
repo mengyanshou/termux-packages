@@ -2,9 +2,10 @@ TERMUX_PKG_HOMEPAGE="https://github.com/kubernetes/minikube"
 TERMUX_PKG_DESCRIPTION="minikube implements a local Kubernetes cluster."
 TERMUX_PKG_LICENSE="Apache-2.0"
 TERMUX_PKG_MAINTAINER="@termux"
-TERMUX_PKG_VERSION=1.30.1
+TERMUX_PKG_VERSION="1.32.0"
 TERMUX_PKG_SRCURL="https://github.com/kubernetes/minikube/archive/v${TERMUX_PKG_VERSION}.tar.gz"
-TERMUX_PKG_SHA256=e23fbb1fc3028370968f5bf4777aacbeb7e1fd3d2e96e7ed090860cedbd62219
+TERMUX_PKG_SHA256=d8413766aa8ba81a6eee24d8ca8f2f7862029521630122b83ed892ec4f9b4960
+TERMUX_PKG_AUTO_UPDATE=true
 TERMUX_PKG_DEPENDS="docker, kubectl"
 TERMUX_PKG_BUILD_IN_SRC=true
 

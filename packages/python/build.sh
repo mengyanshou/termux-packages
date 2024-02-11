@@ -4,11 +4,10 @@ TERMUX_PKG_DESCRIPTION="Python 3 programming language intended to enable clear p
 TERMUX_PKG_LICENSE="custom"
 TERMUX_PKG_LICENSE_FILE="LICENSE"
 TERMUX_PKG_MAINTAINER="@termux"
-_MAJOR_VERSION=3.11
-TERMUX_PKG_VERSION=${_MAJOR_VERSION}.4
-TERMUX_PKG_REVISION=1
+TERMUX_PKG_VERSION=3.11.8
 TERMUX_PKG_SRCURL=https://www.python.org/ftp/python/${TERMUX_PKG_VERSION}/Python-${TERMUX_PKG_VERSION}.tar.xz
-TERMUX_PKG_SHA256=2f0e409df2ab57aa9fc4cbddfb976af44e4e55bf6f619eee6bc5c2297264a7f6
+TERMUX_PKG_SHA256=9e06008c8901924395bc1da303eac567a729ae012baa182ab39269f650383bb3
+TERMUX_PKG_AUTO_UPDATE=false
 TERMUX_PKG_DEPENDS="gdbm, libandroid-posix-semaphore, libandroid-support, libbz2, libcrypt, libexpat, libffi, liblzma, libsqlite, ncurses, ncurses-ui-libs, openssl, readline, zlib"
 TERMUX_PKG_RECOMMENDS="python-ensurepip-wheels, python-pip"
 TERMUX_PKG_SUGGESTS="python-tkinter"
@@ -19,6 +18,8 @@ TERMUX_PKG_PROVIDES="python3"
 
 # https://github.com/termux/termux-packages/issues/15908
 TERMUX_MAKE_PROCESSES=1
+
+_MAJOR_VERSION="${TERMUX_PKG_VERSION%.*}"
 
 # Set ac_cv_func_wcsftime=no to avoid errors such as "character U+ca0025 is not in range [U+0000; U+10ffff]"
 # when executing e.g. "from time import time, strftime, localtime; print(strftime(str('%Y-%m-%d %H:%M'), localtime()))"
@@ -102,18 +103,20 @@ termux_step_create_debscripts() {
 
 	if [[ -f "$TERMUX_PREFIX/bin/pip" && \
 	 ! (("$TERMUX_PACKAGE_FORMAT" = "debian" && -f $TERMUX_PREFIX/var/lib/dpkg/info/python-pip.list) || \
-	    ("$TERMUX_PACKAGE_FORMAT" = "pacman" && \$(ls $TERMUX_PREFIX/var/lib/pacman/local/python-pip-*))) ]]; then
+	    ("$TERMUX_PACKAGE_FORMAT" = "pacman" && \$(ls $TERMUX_PREFIX/var/lib/pacman/local/python-pip-* 2>/dev/null))) ]]; then
 		echo "Removing pip..."
 		rm -f $TERMUX_PREFIX/bin/pip $TERMUX_PREFIX/bin/pip3* $TERMUX_PREFIX/bin/easy_install $TERMUX_PREFIX/bin/easy_install-3*
 		rm -Rf $TERMUX_PREFIX/lib/python${_MAJOR_VERSION}/site-packages/pip
 		rm -Rf ${TERMUX_PREFIX}/lib/python${_MAJOR_VERSION}/site-packages/pip-*.dist-info
 	fi
 
-	echo ""
-	echo "== Note: pip is now separate from python =="
-	echo "To install, enter the following command:"
-	echo "   pkg install python-pip"
-	echo ""
+	if [ ! -f "$TERMUX_PREFIX/bin/pip" ]; then
+		echo
+		echo "== Note: pip is now separate from python =="
+		echo "To install, enter the following command:"
+		echo "   pkg install python-pip"
+		echo
+	fi
 
 	exit 0
 	POSTINST_EOF

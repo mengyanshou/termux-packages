@@ -21,6 +21,15 @@ termux_step_create_debian_package() {
 		Version: $TERMUX_PKG_FULLVERSION
 		Homepage: $TERMUX_PKG_HOMEPAGE
 	HERE
+	if [ "$TERMUX_GLOBAL_LIBRARY" = "true" ] && [ "$TERMUX_PACKAGE_LIBRARY" = "glibc" ]; then
+		test ! -z "$TERMUX_PKG_DEPENDS" && TERMUX_PKG_DEPENDS=$(package__add_prefix_glibc_to_package_list "$TERMUX_PKG_DEPENDS")
+		test ! -z "$TERMUX_PKG_BREAKS" && TERMUX_PKG_BREAKS=$(package__add_prefix_glibc_to_package_list "$TERMUX_PKG_BREAKS")
+		test ! -z "$TERMUX_PKG_CONFLICTS" && TERMUX_PKG_CONFLICTS=$(package__add_prefix_glibc_to_package_list "$TERMUX_PKG_CONFLICTS")
+		test ! -z "$TERMUX_PKG_RECOMMENDS" && TERMUX_PKG_RECOMMENDS=$(package__add_prefix_glibc_to_package_list "$TERMUX_PKG_RECOMMENDS")
+		test ! -z "$TERMUX_PKG_REPLACES" && TERMUX_PKG_REPLACES=$(package__add_prefix_glibc_to_package_list "$TERMUX_PKG_REPLACES")
+		test ! -z "$TERMUX_PKG_PROVIDES" && TERMUX_PKG_PROVIDES=$(package__add_prefix_glibc_to_package_list "$TERMUX_PKG_PROVIDES")
+		test ! -z "$TERMUX_PKG_SUGGESTS" && TERMUX_PKG_SUGGESTS=$(package__add_prefix_glibc_to_package_list "$TERMUX_PKG_SUGGESTS")
+	fi
 	test ! -z "$TERMUX_PKG_BREAKS" && echo "Breaks: $TERMUX_PKG_BREAKS" >> DEBIAN/control
 	test ! -z "$TERMUX_PKG_PRE_DEPENDS" && echo "Pre-Depends: $TERMUX_PKG_PRE_DEPENDS" >> DEBIAN/control
 	test ! -z "$TERMUX_PKG_DEPENDS" && echo "Depends: $TERMUX_PKG_DEPENDS" >> DEBIAN/control
@@ -33,7 +42,7 @@ termux_step_create_debian_package() {
 	echo "Description: $TERMUX_PKG_DESCRIPTION" >> DEBIAN/control
 
 	# Create DEBIAN/conffiles (see https://www.debian.org/doc/debian-policy/ap-pkg-conffiles.html):
-	for f in $TERMUX_PKG_CONFFILES; do echo "$TERMUX_PREFIX/$f" >> DEBIAN/conffiles; done
+	for f in $TERMUX_PKG_CONFFILES; do echo "$TERMUX_PREFIX_CLASSICAL/$f" >> DEBIAN/conffiles; done
 
 	# Allow packages to create arbitrary control files.
 	# XXX: Should be done in a better way without a function?
