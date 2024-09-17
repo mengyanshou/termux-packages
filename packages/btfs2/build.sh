@@ -2,10 +2,10 @@ TERMUX_PKG_HOMEPAGE=https://www.bittorrent.com/btfs/
 TERMUX_PKG_DESCRIPTION="Decentralized file system integrating with TRON network and Bittorrent network"
 TERMUX_PKG_LICENSE="Apache-2.0, MIT"
 TERMUX_PKG_LICENSE_FILE="LICENSE-APACHE, LICENSE-MIT"
-TERMUX_PKG_MAINTAINER="Simbad Marino <cctechmx@gmail.com>"
-TERMUX_PKG_VERSION="2.3.4"
+TERMUX_PKG_MAINTAINER="@termux"
+TERMUX_PKG_VERSION="3.0.0"
 TERMUX_PKG_SRCURL=https://github.com/bittorrent/go-btfs/archive/refs/tags/btfs-v${TERMUX_PKG_VERSION}.tar.gz
-TERMUX_PKG_SHA256=6b252117f63c94c98ec83eba3267e24c7fec0a3c642964ea95965cb463778467
+TERMUX_PKG_SHA256=168a8101b2df3fe6d4715cf0cb465bb8f4f320e334fc572f1377a917db69074e
 TERMUX_PKG_AUTO_UPDATE=true
 TERMUX_PKG_UPDATE_VERSION_REGEXP="\d+\.\d+\.\d+"
 TERMUX_PKG_DEPENDS="libc++"
@@ -32,9 +32,9 @@ termux_setup_golang_119() {
 			"$TERMUX_BUILDGO_TAR" \
 			"$TERMUX_GO_SHA256"
 
-		( cd "$TERMUX_PKG_CACHEDIR"; tar xf "$TERMUX_BUILDGO_TAR"; 
+		( cd "$TERMUX_PKG_CACHEDIR"; tar xf "$TERMUX_BUILDGO_TAR";
 		( cd go; . ${TERMUX_PKG_BUILDER_DIR}/fix-hardcoded-etc-resolv-conf.sh )
-		  mv go "$TERMUX_BUILDGO_FOLDER"; rm "$TERMUX_BUILDGO_TAR" )
+		mv go "$TERMUX_BUILDGO_FOLDER"; rm "$TERMUX_BUILDGO_TAR" )
 	else
 		termux_error_exit "This package cannot build on device currently."
 	fi

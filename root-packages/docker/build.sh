@@ -101,9 +101,9 @@ termux_step_make() {
 	export VERSION=v${TERMUX_PKG_VERSION}-ce
 	export DISABLE_WARN_OUTSIDE_CONTAINER=1
 	export LDFLAGS="-L ${TERMUX_PREFIX}/lib -r ${TERMUX_PREFIX}/lib"
-	make -j ${TERMUX_MAKE_PROCESSES} dynbinary
+	make -j ${TERMUX_PKG_MAKE_PROCESSES} dynbinary
 	unset GOOS GOARCH CGO_LDFLAGS CC CXX CFLAGS CXXFLAGS LDFLAGS
-	make -j ${TERMUX_MAKE_PROCESSES} manpages
+	make -j ${TERMUX_PKG_MAKE_PROCESSES} manpages
 	)
 	echo " Done!"
 }
@@ -118,9 +118,9 @@ termux_step_make_install() {
 	mkdir -p "${TERMUX_PREFIX}"/etc/docker
 	sed -e "s|@TERMUX_PREFIX@|$TERMUX_PREFIX|g" \
 		"${TERMUX_PKG_BUILDER_DIR}"/daemon.json > "${TERMUX_PREFIX}"/etc/docker/daemon.json
-        chmod 600 "${TERMUX_PREFIX}"/etc/docker/daemon.json
+	chmod 600 "${TERMUX_PREFIX}"/etc/docker/daemon.json
 	sed -e "s|@TERMUX_PREFIX@|$TERMUX_PREFIX|g" \
-	       "${TERMUX_PKG_BUILDER_DIR}/dockerd.sh" > "${TERMUX_PREFIX}/bin/dockerd"
+		"${TERMUX_PKG_BUILDER_DIR}/dockerd.sh" > "${TERMUX_PREFIX}/bin/dockerd"
 	chmod 700 "${TERMUX_PREFIX}/bin/dockerd"
 }
 

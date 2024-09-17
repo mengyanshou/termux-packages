@@ -3,9 +3,9 @@ TERMUX_PKG_DESCRIPTION="Object-relational SQL database"
 TERMUX_PKG_LICENSE="PostgreSQL"
 TERMUX_PKG_LICENSE_FILE="COPYRIGHT"
 TERMUX_PKG_MAINTAINER="@termux"
-TERMUX_PKG_VERSION="16.1"
+TERMUX_PKG_VERSION="16.4"
 TERMUX_PKG_SRCURL=https://ftp.postgresql.org/pub/source/v$TERMUX_PKG_VERSION/postgresql-$TERMUX_PKG_VERSION.tar.bz2
-TERMUX_PKG_SHA256=ce3c4d85d19b0121fe0d3f8ef1fa601f71989e86f8a66f7dc3ad546dd5564fec
+TERMUX_PKG_SHA256=971766d645aa73e93b9ef4e3be44201b4f45b5477095b049125403f9f3386d6f
 TERMUX_PKG_DEPENDS="libandroid-execinfo, libandroid-shmem, libicu, libuuid, libxml2, openssl, readline, zlib"
 # - pgac_cv_prog_cc_LDFLAGS_EX_BE__Wl___export_dynamic: Needed to fix PostgreSQL 16 that
 #   causes initdb failure: cannot locate symbol
@@ -41,7 +41,7 @@ termux_step_host_build() {
 	# Build a native zic binary which we have patched to
 	# use symlinks instead of hard links.
 	$TERMUX_PKG_SRCDIR/configure --without-readline
-	make -j "${TERMUX_MAKE_PROCESSES}"
+	make -j "${TERMUX_PKG_MAKE_PROCESSES}"
 }
 
 termux_step_pre_configure() {
@@ -57,6 +57,7 @@ termux_step_post_make_install() {
 	make -C doc/src/sgml install-man
 
 	for contrib in \
+		btree_gin \
 		btree_gist \
 		citext \
 		dblink \
@@ -73,6 +74,6 @@ termux_step_post_make_install() {
 		unaccent \
 		uuid-ossp \
 		; do
-		(make -C contrib/${contrib} -s -j ${TERMUX_MAKE_PROCESSES} install)
+		(make -C contrib/${contrib} -s -j ${TERMUX_PKG_MAKE_PROCESSES} install)
 	done
 }

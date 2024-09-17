@@ -1,10 +1,11 @@
 TERMUX_PKG_HOMEPAGE=https://github.com/lxml/lxml
-TERMUX_PKG_DESCRIPTION="A straightforward binding of libsass for Python"
+TERMUX_PKG_DESCRIPTION="Python binding for the libxml2 and libxslt libraries"
 TERMUX_PKG_LICENSE="MIT"
 TERMUX_PKG_MAINTAINER="@termux"
-TERMUX_PKG_VERSION=5.1.0
+TERMUX_PKG_VERSION="5.3.0"
+TERMUX_PKG_REVISION=1
 TERMUX_PKG_SRCURL=https://github.com/lxml/lxml/releases/download/lxml-$TERMUX_PKG_VERSION/lxml-$TERMUX_PKG_VERSION.tar.gz
-TERMUX_PKG_SHA256=c4b12bc6d6186ba8ac07bb7bb558312ec6738ca7d9365e862aa9c4462388ffb7
+TERMUX_PKG_SHA256=4e109ca30d1edec1ac60cdbe341905dc3b8f55b16855e03a54aaf59e51ec8c6f
 TERMUX_PKG_DEPENDS="libxml2, libxslt, python, python-pip"
 TERMUX_PKG_PYTHON_COMMON_DEPS="wheel"
 TERMUX_PKG_BUILD_IN_SRC=true

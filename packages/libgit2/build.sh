@@ -4,9 +4,9 @@ TERMUX_PKG_DESCRIPTION="C library implementing Git core methods"
 TERMUX_PKG_LICENSE="GPL-2.0"
 TERMUX_PKG_LICENSE_FILE="COPYING"
 TERMUX_PKG_MAINTAINER="@termux"
-TERMUX_PKG_VERSION="1.7.2"
+TERMUX_PKG_VERSION="1.8.1"
 TERMUX_PKG_SRCURL=https://github.com/libgit2/libgit2/archive/v${TERMUX_PKG_VERSION}.tar.gz
-TERMUX_PKG_SHA256=de384e29d7efc9330c6cdb126ebf88342b5025d920dcb7c645defad85195ea7f
+TERMUX_PKG_SHA256=8c1eaf0cf07cba0e9021920bfba9502140220786ed5d8a8ec6c7ad9174522f8e
 TERMUX_PKG_AUTO_UPDATE=true
 TERMUX_PKG_DEPENDS="libssh2, openssl, pcre2, zlib"
 TERMUX_PKG_BUILD_DEPENDS="libiconv, libpcreposix"
@@ -21,7 +21,7 @@ TERMUX_PKG_EXTRA_CONFIGURE_ARGS="
 termux_step_post_get_source() {
 	# Do not forget to bump revision of reverse dependencies and rebuild them
 	# after SOVERSION is changed.
-	local _SOVERSION=1.7
+	local _SOVERSION=1.8
 
 	local v=$(echo ${TERMUX_PKG_VERSION#*:} | cut -d . -f 1-2)
 	if [ "${v}" != "${_SOVERSION}" ]; then

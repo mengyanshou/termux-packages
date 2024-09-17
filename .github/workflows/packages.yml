@@ -33,15 +33,12 @@ jobs:
         target_arch: [aarch64, arm, i686, x86_64]
       fail-fast: false
     steps:
-    - name: Setup arm and aarch64 CPU emulators
-      uses: dbhi/qus/action@main
-      with:
-        targets: arm aarch64
     - name: Clone repository
       uses: actions/checkout@v4
       with:
         fetch-depth: 1000
     - name: Gather build summary
+      id: build-info
       run: |
         if [ "${{ github.event_name }}" != "workflow_dispatch" ]; then
           BASE_COMMIT=$(jq --raw-output .pull_request.base.sha "$GITHUB_EVENT_PATH")
@@ -74,15 +71,6 @@ jobs:
             tar cf artifacts/debs-${{ matrix.target_arch }}.tar debs
             echo "[!] Force exiting as tag '%ci:no-build' was applied to HEAD commit message."
             exit 0
-          fi
-
-          # Build local Docker image if setup scripts were changed.
-          # Useful for pull requests submitting changes for both build environment and packages.
-          if grep -qP '^scripts/(Dockerfile|properties\.sh|setup-android-sdk\.sh|setup-ubuntu\.sh)$' <<< "$CHANGED_FILES"; then
-            echo "Detected changes for environment setup scripts. Building custom Docker image now."
-            cd ./scripts
-            docker build -t ghcr.io/termux/package-builder:latest .
-            cd ..
           fi
 
           for repo_path in $(jq --raw-output 'del(.pkg_format) | keys | .[]' repo.json); do
@@ -155,6 +143,34 @@ jobs:
           fi
         done
 
+        declare -a packages
+        for repo_path in $(jq --raw-output 'del(.pkg_format) | keys | .[]' repo.json); do
+          repo=$(jq --raw-output '.["'${repo_path}'"].name' repo.json)
+          if [ -f ./built_${repo}_packages.txt ]; then
+            packages="$packages $(cat ./built_${repo}_packages.txt | tr '\n' ' ')"
+          fi
+        done
+
+        docker='true'
+        [ -n "$packages" ] && if grep -qP "(^|\\s)${packages// /($|\\s)|(^|\\s)}($|\\s)" ./scripts/big-pkgs.list; then
+          docker='false'
+        fi
+        echo "docker-build=$docker" >> $GITHUB_OUTPUT
+        if [ "${{ github.event_name }}" != "workflow_dispatch" ]; then
+          # Build local Docker image if setup scripts were changed.
+          # Useful for pull requests submitting changes for both build environment and packages.
+          if grep -qP '^scripts/(Dockerfile|properties\.sh|setup-android-sdk\.sh|setup-ubuntu\.sh)$' <<< "$CHANGED_FILES"; then
+            echo "Detected changes for environment setup scripts. Building custom Docker image now."
+            if [ $docker == 'false' ]; then
+              echo "Skipping due to building large packages."
+              exit 0
+            fi
+            cd ./scripts
+            docker build -t ghcr.io/termux/package-builder:latest .
+            cd ..
+          fi
+        fi
+
     - name: Lint packages
       run: |
         declare -a package_recipes
@@ -165,31 +181,28 @@ jobs:
           fi
         done
 
-        if [ ! -z "$package_recipes" ]; then
+        if [ -n "$package_recipes" ]; then
           ./scripts/lint-packages.sh $package_recipes
         fi
 
-    - name: Free additional disk space (if necessary)
+    - name: Free additional disk space (if needed)
       run: |
         declare -a packages
         for repo_path in $(jq --raw-output 'del(.pkg_format) | keys | .[]' repo.json); do
           repo=$(jq --raw-output '.["'${repo_path}'"].name' repo.json)
-
           if [ -f ./built_${repo}_packages.txt ]; then
             packages="$packages $(cat ./built_${repo}_packages.txt | tr '\n' ' ')"
           fi
         done
 
-        if [ ! -z "$packages" ]; then
-          if grep -qP "(^|\\s)${packages// /($|\\s)|(^|\\s)}($|\\s)" ./scripts/big-pkgs.list; then
-            ./scripts/setup-ubuntu.sh
-            sudo apt install ninja-build
-            sudo apt purge -yq $(dpkg -l | grep '^ii' | awk '{ print $2 }' | grep -P '(aspnetcore|cabal-|dotnet-|ghc-|libmono|mongodb-|mysql-|php)') \
-              firefox google-chrome-stable microsoft-edge-stable mono-devel mono-runtime-common monodoc-manual ruby
-            sudo apt autoremove -yq
-            sudo apt clean
-            sudo rm -fr /opt/hostedtoolcache /usr/lib/node_modules /usr/share/dotnet /usr/share/swift
-          fi
+        if [ ${{ steps.build-info.outputs.docker-build }} == 'false' ]; then
+          ./scripts/setup-ubuntu.sh
+          sudo apt install ninja-build
+          sudo apt purge -yq $(dpkg -l | grep '^ii' | awk '{ print $2 }' | grep -P '(aspnetcore|cabal-|dotnet-|ghc-|libmono|mongodb-|mysql-|php)') \
+            firefox google-chrome-stable google-cloud-cli microsoft-edge-stable mono-devel mono-runtime-common monodoc-manual powershell ruby
+          sudo apt autoremove -yq
+          sudo apt clean
+          sudo rm -fr /opt/ghc /opt/hostedtoolcache /usr/lib/node_modules /usr/local/share/boost /usr/share/dotnet /usr/share/swift
         fi
 
     - name: Build packages
@@ -197,18 +210,15 @@ jobs:
         declare -a packages
         for repo_path in $(jq --raw-output 'del(.pkg_format) | keys | .[]' repo.json); do
           repo=$(jq --raw-output '.["'${repo_path}'"].name' repo.json)
-
           if [ -f ./built_${repo}_packages.txt ]; then
             packages="$packages $(cat ./built_${repo}_packages.txt | tr '\n' ' ')"
           fi
         done
 
-        if [ ! -z "$packages" ]; then
-          if grep -qP "(^|\\s)${packages// /($|\\s)|(^|\\s)}($|\\s)" ./scripts/big-pkgs.list; then
-            NDK=$ANDROID_NDK_LATEST_HOME ANDROID_HOME=$ANDROID_SDK_ROOT ./build-package.sh -I -a ${{ matrix.target_arch }} $packages
-          else
-            ./scripts/run-docker.sh ./build-package.sh -I -a ${{ matrix.target_arch }} $packages
-          fi
+        if [ ${{ steps.build-info.outputs.docker-build }} == 'false' ]; then
+          NDK=$ANDROID_NDK ANDROID_HOME=$ANDROID_SDK_ROOT ./build-package.sh -I -a ${{ matrix.target_arch }} $packages
+        elif [ -n "$packages" ]; then
+          ./scripts/run-docker.sh ./build-package.sh -I -a ${{ matrix.target_arch }} $packages
         fi
 
     - name: Generate build artifacts
@@ -238,7 +248,13 @@ jobs:
     - name: Checksums for built *.deb files
       if: always()
       run: |
-        find debs -type f -name "*.deb" -exec sha256sum "{}" \; | sort -k2
+        find debs -type f -name "*.deb" -exec sha256sum "{}" \; | sort -k2 | tee checksum-${{ matrix.target_arch }}-${{ github.sha }}.txt
+    - name: Store checksums for built *.deb files
+      if: always()
+      uses: actions/upload-artifact@v4
+      with:
+        name: checksum-${{ matrix.target_arch }}-${{ github.sha }}
+        path: checksum-${{ matrix.target_arch }}-${{ github.sha }}.txt
     - name: Store *.deb files
       if: always()
       uses: actions/upload-artifact@v4

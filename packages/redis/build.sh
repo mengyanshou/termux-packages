@@ -2,10 +2,11 @@ TERMUX_PKG_HOMEPAGE=https://redis.io/
 TERMUX_PKG_DESCRIPTION="In-memory data structure store used as a database, cache and message broker"
 TERMUX_PKG_LICENSE="BSD 3-Clause"
 TERMUX_PKG_MAINTAINER="@termux"
-TERMUX_PKG_VERSION="7.2.4"
-TERMUX_PKG_SRCURL=https://download.redis.io/releases/redis-$TERMUX_PKG_VERSION.tar.gz
-TERMUX_PKG_SHA256=8d104c26a154b29fd67d6568b4f375212212ad41e0c2caa3d66480e78dbd3b59
-TERMUX_PKG_AUTO_UPDATE=true
+# Frozen! Do not update to 7.4.0
+# until the license/replacement discussion is concluded
+TERMUX_PKG_VERSION="1:7.2.5"
+TERMUX_PKG_SRCURL=https://download.redis.io/releases/redis-${TERMUX_PKG_VERSION:2}.tar.gz
+TERMUX_PKG_SHA256=5981179706f8391f03be91d951acafaeda91af7fac56beffb2701963103e423d
 TERMUX_PKG_DEPENDS="libandroid-execinfo, libandroid-glob"
 TERMUX_PKG_BUILD_IN_SRC=true
 TERMUX_PKG_CONFFILES="etc/redis.conf"

@@ -11,7 +11,7 @@ TERMUX_PKG_GROUPS="games"
 
 termux_step_host_build() {
 	cd $TERMUX_PKG_BUILDDIR
-	make -j $TERMUX_MAKE_PROCESSES dMagnetic
+	make -j $TERMUX_PKG_MAKE_PROCESSES dMagnetic
 	mv dMagnetic $TERMUX_PKG_HOSTBUILD_DIR/
 	make clean
 }
@@ -23,7 +23,7 @@ termux_step_post_configure() {
 
 termux_step_post_make_install() {
 	sed "s%@TERMUX_PREFIX@%$TERMUX_PREFIX%g" \
-	    $TERMUX_PKG_BUILDER_DIR/magnetic-scrolls.in \
-	    > $TERMUX_PREFIX/bin/magnetic-scrolls
+		$TERMUX_PKG_BUILDER_DIR/magnetic-scrolls.in \
+		> $TERMUX_PREFIX/bin/magnetic-scrolls
 	chmod 700 $TERMUX_PREFIX/bin/magnetic-scrolls
 }

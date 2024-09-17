@@ -2,10 +2,11 @@ TERMUX_PKG_HOMEPAGE=https://mariadb.org
 TERMUX_PKG_DESCRIPTION="A drop-in replacement for mysql server"
 TERMUX_PKG_LICENSE="GPL-2.0"
 TERMUX_PKG_MAINTAINER="@termux"
-TERMUX_PKG_VERSION="2:11.2.3"
-TERMUX_PKG_SRCURL=https://mirror.netcologne.de/mariadb/mariadb-${TERMUX_PKG_VERSION#*:}/source/mariadb-${TERMUX_PKG_VERSION#*:}.tar.gz
-TERMUX_PKG_SHA256=14a0bba0c2847eb3f69a4637f55798f8abe10904cd1dd22899c9b0a39c43e35f
-TERMUX_PKG_DEPENDS="libandroid-support, libc++, libcrypt, libedit, liblz4, liblzma, ncurses, openssl, pcre2, zlib"
+TERMUX_PKG_VERSION="2:11.5.2"
+TERMUX_PKG_REVISION=1
+TERMUX_PKG_SRCURL=https://archive.mariadb.org/mariadb-${TERMUX_PKG_VERSION#*:}/source/mariadb-${TERMUX_PKG_VERSION#*:}.tar.gz
+TERMUX_PKG_SHA256=e25fac00aeb34610faf62182836a14e3310c0ca5d882e9109f63bd8dfdc3542d
+TERMUX_PKG_DEPENDS="libandroid-support, libc++, libcrypt, libedit, liblz4, liblzma, ncurses, openssl, pcre2, zlib, zstd"
 TERMUX_PKG_BREAKS="mariadb-dev"
 TERMUX_PKG_CONFLICTS="mysql"
 TERMUX_PKG_REPLACES="mariadb-dev"
@@ -61,9 +62,10 @@ TERMUX_PKG_EXTRA_CONFIGURE_ARGS="
 -DINSTALL_SYSCONFDIR=$TERMUX_PREFIX/etc
 "
 TERMUX_PKG_RM_AFTER_INSTALL="
+bin/rcmysql
 bin/mysqltest*
 share/man/man1/mysql-test-run.pl.1
-share/mysql/mysql-test
+share/mariadb/mariadb-test
 mysql-test
 sql-bench
 "
@@ -75,7 +77,7 @@ termux_step_host_build() {
 		$TERMUX_PKG_SRCDIR \
 		-DWITH_SSL=bundled \
 		-DCMAKE_BUILD_TYPE=Release
-	make -j $TERMUX_MAKE_PROCESSES import_executables
+	make -j $TERMUX_PKG_MAKE_PROCESSES import_executables
 }
 
 termux_step_pre_configure() {
@@ -104,7 +106,7 @@ termux_step_create_debscripts() {
 	echo "if [ ! -e "$TERMUX_PREFIX/var/lib/mysql" ]; then" > postinst
 	echo "  echo 'Initializing mysql data directory...'" >> postinst
 	echo "  mkdir -p $TERMUX_PREFIX/var/lib/mysql" >> postinst
-	echo "  $TERMUX_PREFIX/bin/mysql_install_db --user=root --auth-root-authentication-method=normal --datadir=$TERMUX_PREFIX/var/lib/mysql --basedir=$TERMUX_PREFIX" >> postinst
+	echo "  $TERMUX_PREFIX/bin/mariadb-install-db --user=root --auth-root-authentication-method=normal --datadir=$TERMUX_PREFIX/var/lib/mysql" >> postinst
 	echo "fi" >> postinst
 	echo "exit 0" >> postinst
 	chmod 0755 postinst

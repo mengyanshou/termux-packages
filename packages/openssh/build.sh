@@ -2,9 +2,10 @@ TERMUX_PKG_HOMEPAGE=https://www.openssh.com/
 TERMUX_PKG_DESCRIPTION="Secure shell for logging into a remote machine"
 TERMUX_PKG_LICENSE="BSD"
 TERMUX_PKG_MAINTAINER="@termux"
-TERMUX_PKG_VERSION="9.6p1"
+TERMUX_PKG_VERSION="9.8p1"
+TERMUX_PKG_REVISION=4
 TERMUX_PKG_SRCURL=https://github.com/openssh/openssh-portable/archive/refs/tags/V_$(sed 's/\./_/g; s/p/_P/g' <<< $TERMUX_PKG_VERSION).tar.gz
-TERMUX_PKG_SHA256=1d7192668c586c2b140093032b7b715983d2e918e2a36dbbc9595117608079ee
+TERMUX_PKG_SHA256=d8f6802914e4c344dc74599c29915651554bb318102d71cb4063e1f4a0d8286f
 TERMUX_PKG_AUTO_UPDATE=true
 TERMUX_PKG_DEPENDS="krb5, ldns, libandroid-support, libedit, openssh-sftp-server, openssl, termux-auth, zlib"
 TERMUX_PKG_CONFLICTS="dropbear"
@@ -102,6 +103,7 @@ termux_step_post_massage() {
 
 termux_step_create_debscripts() {
 	echo "#!$TERMUX_PREFIX/bin/sh" > postinst
+	echo "mkdir -p \$PREFIX/var/empty" >> postinst
 	echo "mkdir -p \$HOME/.ssh" >> postinst
 	echo "touch \$HOME/.ssh/authorized_keys" >> postinst
 	echo "chmod 700 \$HOME/.ssh" >> postinst

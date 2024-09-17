@@ -2,9 +2,9 @@ TERMUX_PKG_HOMEPAGE=https://gradle.org/
 TERMUX_PKG_DESCRIPTION="Powerful build system for the JVM"
 TERMUX_PKG_LICENSE="Apache-2.0"
 TERMUX_PKG_MAINTAINER="@termux"
-TERMUX_PKG_VERSION="1:8.6"
+TERMUX_PKG_VERSION="1:8.10.1"
 TERMUX_PKG_SRCURL=https://services.gradle.org/distributions/gradle-${TERMUX_PKG_VERSION:2}-bin.zip
-TERMUX_PKG_SHA256=9631d53cf3e74bfa726893aee1f8994fee4e060c401335946dba2156f440f24c
+TERMUX_PKG_SHA256=1541fa36599e12857140465f3c91a97409b4512501c26f9631fb113e392c5bd1
 TERMUX_PKG_AUTO_UPDATE=true
 TERMUX_PKG_DEPENDS="openjdk-17"
 TERMUX_PKG_BUILD_IN_SRC=true
@@ -22,4 +22,3 @@ termux_step_make_install() {
 		ln -sfr $i $TERMUX_PREFIX/bin/$(basename $i)
 	done
 }
-

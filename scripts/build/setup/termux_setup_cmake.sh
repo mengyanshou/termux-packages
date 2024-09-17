@@ -1,7 +1,7 @@
 termux_setup_cmake() {
-	local TERMUX_CMAKE_MAJORVESION=3.28
+	local TERMUX_CMAKE_MAJORVERSION=3.30
 	local TERMUX_CMAKE_MINORVERSION=3
-	local TERMUX_CMAKE_VERSION=$TERMUX_CMAKE_MAJORVESION.$TERMUX_CMAKE_MINORVERSION
+	local TERMUX_CMAKE_VERSION=$TERMUX_CMAKE_MAJORVERSION.$TERMUX_CMAKE_MINORVERSION
 	local TERMUX_CMAKE_TARNAME=cmake-${TERMUX_CMAKE_VERSION}-linux-x86_64.tar.gz
 	local TERMUX_CMAKE_TARFILE=$TERMUX_PKG_TMPDIR/$TERMUX_CMAKE_TARNAME
 	local TERMUX_CMAKE_FOLDER
@@ -21,16 +21,9 @@ termux_setup_cmake() {
 		if [ ! -d "$TERMUX_CMAKE_FOLDER" ]; then
 			termux_download https://github.com/Kitware/CMake/releases/download/v${TERMUX_CMAKE_VERSION}/$TERMUX_CMAKE_TARNAME \
 				"$TERMUX_CMAKE_TARFILE" \
-				804d231460ab3c8b556a42d2660af4ac7a0e21c98a7f8ee3318a74b4a9a187a6
+				4a5864e9ff0d7945731fe6d14afb61490bf0ec154527bc3af0456bd8fa90decb
 			rm -Rf "$TERMUX_PKG_TMPDIR/cmake-${TERMUX_CMAKE_VERSION}-linux-x86_64"
 			tar xf "$TERMUX_CMAKE_TARFILE" -C "$TERMUX_PKG_TMPDIR"
-			shopt -s nullglob
-			local f
-			for f in "$TERMUX_SCRIPTDIR"/scripts/build/setup/cmake-*.patch; do
-				echo "[${FUNCNAME[0]}]: Applying $(basename "$f")"
-				patch --silent -p1 -d "$TERMUX_PKG_TMPDIR/cmake-${TERMUX_CMAKE_VERSION}-linux-x86_64" < "$f"
-			done
-			shopt -u nullglob
 			mv "$TERMUX_PKG_TMPDIR/cmake-${TERMUX_CMAKE_VERSION}-linux-x86_64" \
 				"$TERMUX_CMAKE_FOLDER"
 		fi

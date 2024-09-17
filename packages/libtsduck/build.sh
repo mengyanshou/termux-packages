@@ -2,10 +2,10 @@ TERMUX_PKG_HOMEPAGE=https://tsduck.io/
 TERMUX_PKG_DESCRIPTION="An extensible toolkit for MPEG transport streams"
 TERMUX_PKG_LICENSE="BSD 2-Clause"
 TERMUX_PKG_MAINTAINER="@termux"
-TERMUX_PKG_VERSION="3.36.3528"
+TERMUX_PKG_VERSION="3.38.3822"
 _VERSION=$(echo "${TERMUX_PKG_VERSION}" | sed 's/\./-/2')
 TERMUX_PKG_SRCURL=https://github.com/tsduck/tsduck/archive/refs/tags/v${_VERSION}.tar.gz
-TERMUX_PKG_SHA256=068ef1cbc60821a4cce8d50c876edef5150ad581b31f4a92f085e20b3becd0eb
+TERMUX_PKG_SHA256=18bb779584384197dbb72af406cdcd42fe06efbf4a6ca8fd3138eb518b7ad369
 TERMUX_PKG_DEPENDS="libandroid-glob, libc++, libcurl, libedit"
 TERMUX_PKG_HOSTBUILD=true
 TERMUX_PKG_BUILD_IN_SRC=true
@@ -28,6 +28,7 @@ NOTEST=1
 NOVATEK=1
 SYSPREFIX=${TERMUX_PREFIX}
 USELIB64=
+CXXFLAGS_WARNINGS=
 "
 TERMUX_PKG_RM_AFTER_INSTALL="
 etc/security
@@ -42,7 +43,7 @@ termux_step_post_get_source() {
 
 termux_step_host_build() {
 	find $TERMUX_PKG_SRCDIR -mindepth 1 -maxdepth 1 -exec cp -a \{\} ./ \;
-	make -j $TERMUX_MAKE_PROCESSES \
+	make -j $TERMUX_PKG_MAKE_PROCESSES \
 		NOCURL=1 \
 		NODEKTEC=1 \
 		NOEDITLINE=1 \
@@ -69,7 +70,7 @@ termux_step_make() {
 		-e "s|\$(call F_SEARCH_CROSS,gcc)|${CC}|g" \
 		-e "s|\$(call F_SEARCH_CROSS,ld)|${LD}|g" \
 		-i ${TERMUX_PKG_SRCDIR}/Makefile.inc
-	make -j $TERMUX_MAKE_PROCESSES \
+	make -j $TERMUX_PKG_MAKE_PROCESSES \
 		CXX="$CXX" \
 		GCC="$CC" \
 		LD="$LD" \

@@ -3,10 +3,10 @@ TERMUX_PKG_DESCRIPTION="A Rust compiler front-end for IDEs"
 TERMUX_PKG_LICENSE="Apache-2.0, MIT"
 TERMUX_PKG_LICENSE_FILE="LICENSE-APACHE, LICENSE-MIT"
 TERMUX_PKG_MAINTAINER="@termux"
-TERMUX_PKG_VERSION="20240205"
+TERMUX_PKG_VERSION="20240916"
 _VERSION=${TERMUX_PKG_VERSION:0:4}-${TERMUX_PKG_VERSION:4:2}-${TERMUX_PKG_VERSION:6:2}
 TERMUX_PKG_SRCURL=https://github.com/rust-lang/rust-analyzer/archive/refs/tags/${_VERSION}.tar.gz
-TERMUX_PKG_SHA256=3ce30cbd657fbf34697cf53a7d2775fc41c40a9d4e48cf716fa8bec7fdc41ded
+TERMUX_PKG_SHA256=91d6f7dadeaac920b633f778a5d39975c48f46b5adb248025aa1b7fa3275d27e
 TERMUX_PKG_DEPENDS="rust-src"
 TERMUX_PKG_ANTI_BUILD_DEPENDS="rust-src"
 TERMUX_PKG_BUILD_IN_SRC=true
@@ -17,7 +17,7 @@ termux_pkg_auto_update() {
 	local api_url="https://api.github.com/repos/rust-lang/rust-analyzer/tags"
 	local api_url_r=$(curl -s "${api_url}")
 	local r1=$(echo "${api_url_r}" | jq .[].name | sed -e 's|\"||g')
-	local latest_tag=$(echo "${r1}" | sed -nE 's/^([0-9]*-)/\1/p' | sort | tail -n1)
+	local latest_tag=$(echo "${r1}" | sed -nE 's/^([0-9]*-)/\1/p' | sort -V | tail -n1)
 	# https://github.com/termux/termux-packages/issues/18667
 	local latest_version=${latest_tag:0:4}${latest_tag:5:2}${latest_tag:8:2}
 	if [[ "${latest_version}" == "${TERMUX_PKG_VERSION}" ]]; then
@@ -56,7 +56,7 @@ termux_step_pre_configure() {
 }
 
 termux_step_make() {
-	cargo build --jobs "${TERMUX_MAKE_PROCESSES}" --target "${CARGO_TARGET_NAME}" --release
+	cargo build --jobs "${TERMUX_PKG_MAKE_PROCESSES}" --target "${CARGO_TARGET_NAME}" --release
 }
 
 termux_step_make_install() {

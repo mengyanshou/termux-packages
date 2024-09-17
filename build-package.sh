@@ -27,11 +27,10 @@ export TERMUX_SCRIPTDIR
 # Store pid of current process in a file for docker__run_docker_exec_trap
 source "$TERMUX_SCRIPTDIR/scripts/utils/docker/docker.sh"; docker__create_docker_exec_pid_file
 
-# Functions for working with packages
-source "$TERMUX_SCRIPTDIR/scripts/utils/package/package.sh"
+# Source the `termux_package` library.
+source "$TERMUX_SCRIPTDIR/scripts/utils/termux/package/termux_package.sh"
 
-SOURCE_DATE_EPOCH=$(git log -1 --pretty=%ct 2>/dev/null || date "+%s")
-export SOURCE_DATE_EPOCH
+export SOURCE_DATE_EPOCH=${SOURCE_DATE_EPOCH:-$(git -c log.showSignature=false log -1 --pretty=%ct 2>/dev/null || date "+%s")}
 
 if [ "$(uname -o)" = "Android" ] || [ -e "/system/bin/app_process" ]; then
 	if [ "$(id -u)" = "0" ]; then
@@ -59,7 +58,6 @@ if [ ! -e "$TERMUX_BUILD_LOCK_FILE" ]; then
 	touch "$TERMUX_BUILD_LOCK_FILE"
 fi
 
-export TERMUX_PACKAGES_DIRECTORIES=$(jq --raw-output 'del(.pkg_format) | keys | .[]' ${TERMUX_SCRIPTDIR}/repo.json)
 export TERMUX_REPO_PKG_FORMAT=$(jq --raw-output '.pkg_format // "debian"' ${TERMUX_SCRIPTDIR}/repo.json)
 
 # Special variable for internal use. It forces script to ignore
@@ -230,8 +228,8 @@ termux_step_post_get_source() {
 }
 
 # Optional host build. Not to be overridden by packages.
-# shellcheck source=scripts/build/termux_step_handle_hostbuild.sh
-source "$TERMUX_SCRIPTDIR/scripts/build/termux_step_handle_hostbuild.sh"
+# shellcheck source=scripts/build/termux_step_handle_host_build.sh
+source "$TERMUX_SCRIPTDIR/scripts/build/termux_step_handle_host_build.sh"
 
 # Perform a host build. Will be called in $TERMUX_PKG_HOSTBUILD_DIR.
 # After termux_step_post_get_source() and before termux_step_patch_package()
@@ -239,8 +237,8 @@ source "$TERMUX_SCRIPTDIR/scripts/build/termux_step_handle_hostbuild.sh"
 source "$TERMUX_SCRIPTDIR/scripts/build/termux_step_host_build.sh"
 
 # Setup a standalone Android NDK toolchain. Called from termux_step_setup_toolchain.
-# shellcheck source=scripts/build/toolchain/termux_setup_toolchain_26b.sh
-source "$TERMUX_SCRIPTDIR/scripts/build/toolchain/termux_setup_toolchain_26b.sh"
+# shellcheck source=scripts/build/toolchain/termux_setup_toolchain_27b.sh
+source "$TERMUX_SCRIPTDIR/scripts/build/toolchain/termux_setup_toolchain_27b.sh"
 
 # Setup a standalone Android NDK 23c toolchain. Called from termux_step_setup_toolchain.
 # shellcheck source=scripts/build/toolchain/termux_setup_toolchain_23c.sh
@@ -619,8 +617,8 @@ for ((i=0; i<${#PACKAGE_LIST[@]}; i++)); do
 
 		termux_step_start_build
 
-		if ! termux_check_package_in_building_packages_list "$TERMUX_PKG_NAME"; then
-			echo "$TERMUX_PKG_NAME" >> $TERMUX_BUILD_PACKAGE_CALL_BUILDING_PACKAGES_LIST_FILE_PATH
+		if ! termux_check_package_in_building_packages_list "${TERMUX_PKG_BUILDER_DIR#${TERMUX_SCRIPTDIR}/}"; then
+			echo "${TERMUX_PKG_BUILDER_DIR#${TERMUX_SCRIPTDIR}/}" >> $TERMUX_BUILD_PACKAGE_CALL_BUILDING_PACKAGES_LIST_FILE_PATH
 		fi
 
 		if [ "$TERMUX_CONTINUE_BUILD" == "false" ]; then
@@ -638,7 +636,7 @@ for ((i=0; i<${#PACKAGE_LIST[@]}; i++)); do
 			termux_step_get_source
 			cd "$TERMUX_PKG_SRCDIR"
 			termux_step_post_get_source
-			termux_step_handle_hostbuild
+			termux_step_handle_host_build
 		fi
 
 		termux_step_setup_toolchain
@@ -682,8 +680,8 @@ for ((i=0; i<${#PACKAGE_LIST[@]}; i++)); do
 			termux_error_exit "Unknown packaging format '$TERMUX_PACKAGE_FORMAT'."
 		fi
 		# Saving a list of compiled packages for further work with it
-		if termux_check_package_in_building_packages_list "$TERMUX_PKG_NAME"; then
-			sed -i "/^${TERMUX_PKG_NAME}$/d" "$TERMUX_BUILD_PACKAGE_CALL_BUILDING_PACKAGES_LIST_FILE_PATH"
+		if termux_check_package_in_building_packages_list "${TERMUX_PKG_BUILDER_DIR#${TERMUX_SCRIPTDIR}/}"; then
+			sed -i "\|^${TERMUX_PKG_BUILDER_DIR#${TERMUX_SCRIPTDIR}/}$|d" "$TERMUX_BUILD_PACKAGE_CALL_BUILDING_PACKAGES_LIST_FILE_PATH"
 		fi
 		termux_add_package_to_built_packages_list "$TERMUX_PKG_NAME"
 		termux_step_finish_build

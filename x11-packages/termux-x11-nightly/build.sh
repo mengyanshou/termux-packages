@@ -3,9 +3,9 @@ TERMUX_PKG_DESCRIPTION="Termux X11 add-on application. Still in early developmen
 TERMUX_PKG_LICENSE="GPL-3.0"
 TERMUX_PKG_MAINTAINER="Twaik Yont @twaik"
 TERMUX_PKG_VERSION=1.03.00
-TERMUX_PKG_REVISION=3
-TERMUX_PKG_SRCURL=https://github.com/termux/termux-x11/archive/a50f18ef2d148a299387435edbde8fe690e9c504.tar.gz
-TERMUX_PKG_SHA256=040ac1d57f610263d374b105ee7c5cd20099f98e3d8e43cb9bd203b803a93684
+TERMUX_PKG_REVISION=7
+TERMUX_PKG_SRCURL=https://github.com/termux/termux-x11/archive/99efcc2e41f886c584ee7db8c0622d9294113df4.tar.gz
+TERMUX_PKG_SHA256=6ae35ecf4cfb2e846743eab2fe4070e0b509949cf16d667e31b381690b6b67f6
 TERMUX_PKG_AUTO_UPDATE=false
 TERMUX_PKG_PLATFORM_INDEPENDENT=true
 TERMUX_PKG_BUILD_IN_SRC=true
@@ -13,7 +13,7 @@ TERMUX_PKG_DEPENDS="xkeyboard-config"
 TERMUX_PKG_BREAKS="termux-x11"
 TERMUX_PKG_REPLACES="termux-x11"
 _JDK_VERSION=17.0.7.7.1
-_GRADLE_VERSION=8.1.1
+_GRADLE_VERSION=8.7
 
 termux_step_make() {
 	# Download and use a new enough gradle version to avoid the process hanging after running:
@@ -24,7 +24,7 @@ termux_step_make() {
 	termux_download \
 		https://services.gradle.org/distributions/gradle-$_GRADLE_VERSION-all.zip \
 		$TERMUX_PKG_CACHEDIR/gradle-$_GRADLE_VERSION-all.zip \
-		5625a0ae20fe000d9225d000b36909c7a0e0e8dda61c19b12da769add847c975
+		194717442575a6f96e1c1befa2c30e9a4fc90f701d7aee33eb879b79e7ff05c0
 	mkdir $TERMUX_PKG_TMPDIR/gradle
 	mkdir $TERMUX_PKG_TMPDIR/gradle-jdk
 	
@@ -46,12 +46,15 @@ termux_step_make() {
 	cd $TERMUX_PKG_SRCDIR
 	# Github action builds are signed with debug key, and loader checks self signature while loading main package.
 	$TERMUX_PKG_TMPDIR/gradle/gradle-$_GRADLE_VERSION/bin/gradle :shell-loader:assembleDebug
+	chmod +x $TERMUX_PKG_SRCDIR/termux-x11
+	chmod +x $TERMUX_PKG_SRCDIR/termux-x11-preference
 }
 
 termux_step_make_install() {
 	mkdir -p $TERMUX_PREFIX/bin
 	mkdir -p $TERMUX_PREFIX/libexec/termux-x11
 	cp $TERMUX_PKG_SRCDIR/termux-x11 $TERMUX_PREFIX/bin/termux-x11
+	cp $TERMUX_PKG_SRCDIR/termux-x11-preference $TERMUX_PREFIX/bin/termux-x11-preference
 	cp $TERMUX_PKG_SRCDIR/shell-loader/build/outputs/apk/debug/shell-loader-debug.apk \
 		$TERMUX_PREFIX/libexec/termux-x11/loader.apk
 }

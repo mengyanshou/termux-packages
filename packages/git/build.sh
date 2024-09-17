@@ -2,11 +2,12 @@ TERMUX_PKG_HOMEPAGE=https://git-scm.com/
 TERMUX_PKG_DESCRIPTION="Fast, scalable, distributed revision control system"
 TERMUX_PKG_LICENSE="GPL-2.0"
 TERMUX_PKG_MAINTAINER="@termux"
-TERMUX_PKG_VERSION="2.43.1"
+TERMUX_PKG_VERSION="2.46.1"
 TERMUX_PKG_SRCURL=https://mirrors.kernel.org/pub/software/scm/git/git-${TERMUX_PKG_VERSION}.tar.xz
-TERMUX_PKG_SHA256=2234f37b453ff8e4672c21ad40d41cc7393c9a8dcdfe640bec7ac5b5358f30d2
+TERMUX_PKG_SHA256=888cafb8bd6ab4cbbebc168040a8850eb088f81dc3ac2617195cfc0877f0f543
 TERMUX_PKG_AUTO_UPDATE=true
-TERMUX_PKG_DEPENDS="libcurl, libiconv, less, openssl, pcre2, zlib"
+TERMUX_PKG_DEPENDS="libcurl, libexpat, libiconv, less, openssl, pcre2, zlib"
+TERMUX_PKG_RECOMMENDS="openssh"
 TERMUX_PKG_SUGGESTS="perl"
 
 ## This requires a working $TERMUX_PREFIX/bin/sh on the host building:
@@ -16,6 +17,7 @@ ac_cv_header_libintl_h=no
 ac_cv_iconv_omits_bom=no
 ac_cv_snprintf_returns_bogus=no
 --with-curl
+--with-expat
 --with-shell=$TERMUX_PREFIX/bin/sh
 --with-tcltk=$TERMUX_PREFIX/bin/wish
 "
@@ -24,7 +26,6 @@ ac_cv_snprintf_returns_bogus=no
 TERMUX_PKG_EXTRA_MAKE_ARGS="
 NO_NSEC=1
 NO_GETTEXT=1
-NO_EXPAT=1
 NO_INSTALL_HARDLINKS=1
 PERL_PATH=$TERMUX_PREFIX/bin/perl
 USE_LIBPCRE2=1
@@ -65,16 +66,16 @@ termux_step_pre_configure() {
 
 termux_step_post_make_install() {
 	# Installing man requires asciidoc and xmlto, so git uses separate make targets for man pages
-	make -j $TERMUX_MAKE_PROCESSES install-man
+	make -j $TERMUX_PKG_MAKE_PROCESSES install-man
 
-	make -j $TERMUX_MAKE_PROCESSES -C contrib/subtree $TERMUX_PKG_EXTRA_MAKE_ARGS
+	make -j $TERMUX_PKG_MAKE_PROCESSES -C contrib/subtree $TERMUX_PKG_EXTRA_MAKE_ARGS
 	make -C contrib/subtree $TERMUX_PKG_EXTRA_MAKE_ARGS ${TERMUX_PKG_MAKE_INSTALL_TARGET}
-	make -j $TERMUX_MAKE_PROCESSES -C contrib/subtree install-man
+	make -j $TERMUX_PKG_MAKE_PROCESSES -C contrib/subtree install-man
 
 	mkdir -p $TERMUX_PREFIX/etc/bash_completion.d/
 	cp $TERMUX_PKG_SRCDIR/contrib/completion/git-completion.bash \
-	   $TERMUX_PKG_SRCDIR/contrib/completion/git-prompt.sh \
-	   $TERMUX_PREFIX/etc/bash_completion.d/
+		$TERMUX_PKG_SRCDIR/contrib/completion/git-prompt.sh \
+		$TERMUX_PREFIX/etc/bash_completion.d/
 
 	# Remove the build machine perl setup in termux_step_pre_configure to avoid it being packaged:
 	rm $TERMUX_PREFIX/bin/perl

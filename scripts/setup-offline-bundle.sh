@@ -15,8 +15,8 @@ export TERMUX_SCRIPTDIR="$(dirname "$(readlink -f "$0")")/../"
 mkdir -p "$TERMUX_SCRIPTDIR"/build-tools
 
 . "$TERMUX_SCRIPTDIR"/scripts/properties.sh
-: "${TERMUX_MAKE_PROCESSES:="$(nproc)"}"
-export TERMUX_MAKE_PROCESSES
+: "${TERMUX_PKG_MAKE_PROCESSES:="$(nproc)"}"
+export TERMUX_PKG_MAKE_PROCESSES
 export TERMUX_PACKAGES_OFFLINE=true
 export TERMUX_ARCH=aarch64
 export TERMUX_ON_DEVICE_BUILD=false
@@ -29,8 +29,11 @@ export TERMUX_PKG_API_LEVEL=24
 export TERMUX_TOPDIR="$HOME/.termux-build"
 export TERMUX_PYTHON_CROSSENV_PREFIX="$TERMUX_TOPDIR/python-crossenv-prefix"
 export TERMUX_PYTHON_VERSION=$(. "$TERMUX_SCRIPTDIR/packages/python/build.sh"; echo "$_MAJOR_VERSION")
+export TERMUX_PYTHON_HOME=$TERMUX_PREFIX/lib/python${TERMUX_PYTHON_VERSION}
 export CC=gcc CXX=g++ LD=ld AR=ar STRIP=strip PKG_CONFIG=pkg-config
 export CPPFLAGS="" CFLAGS="" CXXFLAGS="" LDFLAGS=""
+export TERMUX_PACKAGE_LIBRARY=bionic
+export TERMUX_PKG_GO_USE_OLDER=false
 mkdir -p "$TERMUX_PKG_TMPDIR"
 
 # Build tools.

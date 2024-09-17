@@ -2,9 +2,9 @@ TERMUX_PKG_HOMEPAGE=https://github.com/kak-lsp/kak-lsp
 TERMUX_PKG_DESCRIPTION="Language Server Protocol Client for the Kakoune editor"
 TERMUX_PKG_LICENSE="MIT, Unlicense"
 TERMUX_PKG_MAINTAINER="@finagolfin"
-TERMUX_PKG_VERSION="15.0.1"
+TERMUX_PKG_VERSION="17.1.2"
 TERMUX_PKG_SRCURL=https://github.com/kak-lsp/kak-lsp/archive/v$TERMUX_PKG_VERSION.tar.gz
-TERMUX_PKG_SHA256=29edff9b9f1490d724b329ae6d08fca6cda799ebcd5230939b1b97aaf06fd31f
+TERMUX_PKG_SHA256=2a7c83eb1eb7e0e119879ee9be9b0868c07028c4925c317a78e7f2bbe8dc7d0f
 TERMUX_PKG_AUTO_UPDATE=true
 TERMUX_PKG_BUILD_IN_SRC=true
 

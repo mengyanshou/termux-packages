@@ -2,13 +2,16 @@ TERMUX_PKG_HOMEPAGE=https://www.nushell.sh
 TERMUX_PKG_DESCRIPTION="A new type of shell operating on structured data"
 TERMUX_PKG_LICENSE="MIT"
 TERMUX_PKG_MAINTAINER="@termux"
-TERMUX_PKG_VERSION="0.90.1"
+TERMUX_PKG_VERSION="0.97.1"
 TERMUX_PKG_SRCURL=https://github.com/nushell/nushell/archive/$TERMUX_PKG_VERSION.tar.gz
-TERMUX_PKG_SHA256=cb15559556311dea349a0f0b5fddeb3cc7a3adea9b0586753f0c632d69727084
+TERMUX_PKG_SHA256=e605d5a7f104b7f2bf99197ca2f34a4a68f68cc12ecab41f606113e6a65b67b1
 TERMUX_PKG_AUTO_UPDATE=true
 TERMUX_PKG_DEPENDS="openssl, zlib"
 TERMUX_PKG_BUILD_IN_SRC=true
-TERMUX_PKG_EXTRA_CONFIGURE_ARGS=("--no-default-features")
+TERMUX_PKG_EXTRA_CONFIGURE_ARGS="
+--no-default-features
+--features=default-no-clipboard
+"
 
 termux_step_pre_configure() {
 	termux_setup_rust
@@ -25,16 +28,24 @@ termux_step_pre_configure() {
 		popd
 	fi
 
-	local _features="default-no-clipboard extra"
-	if [ $TERMUX_ARCH != "i686" ] && [ $TERMUX_ARCH != "arm" ]; then
-		_features+=" dataframe"
-	fi
-	TERMUX_PKG_EXTRA_CONFIGURE_ARGS+=("--features=$_features")
-
 	: "${CARGO_HOME:=$HOME/.cargo}"
 	export CARGO_HOME
 
+	rm -rf $CARGO_HOME/registry/src/*/libmimalloc-sys-*
 	cargo fetch --target "${CARGO_TARGET_NAME}"
+
+	local d p
+	p="libmimalloc-sys-tls.diff"
+	for d in $CARGO_HOME/registry/src/*/libmimalloc-sys-*; do
+		patch --silent -p1 -d ${d} < "${TERMUX_PKG_BUILDER_DIR}/${p}"
+	done
+
+	# XXX: Do not enable `mimalloc` feature. It will fetch `libmimalloc-sys`,
+	# XXX: which needs to be patched to compile successfully, at building
+	# XXX: time. `cargo fetch` will not fetch its source.
+	# XXX: Besides, the above `libminalloc-sys` patch is also necessary because
+	# XXX: some dependencies of nushell refer to it.
+	sed -i 's/"mimalloc",/ /g' $TERMUX_PKG_SRCDIR/Cargo.toml
 
 	mv $TERMUX_PREFIX/lib/libz.so.1{,.tmp}
 	mv $TERMUX_PREFIX/lib/libz.so{,.tmp}
@@ -45,16 +56,6 @@ termux_step_pre_configure() {
 		$_CARGO_TARGET_LIBDIR/libz.so
 }
 
-termux_step_make_install() {
-	cargo install \
-			--path . \
-			--jobs $TERMUX_MAKE_PROCESSES \
-			--no-track \
-			--target $CARGO_TARGET_NAME \
-			--root $TERMUX_PREFIX \
-			"${TERMUX_PKG_EXTRA_CONFIGURE_ARGS[@]}"
-}
-
 termux_step_post_make_install() {
 	mv $TERMUX_PREFIX/lib/libz.so.1{.tmp,}
 	mv $TERMUX_PREFIX/lib/libz.so{.tmp,}
@@ -63,4 +64,6 @@ termux_step_post_make_install() {
 termux_step_post_massage() {
 	rm -f lib/libz.so.1
 	rm -f lib/libz.so
+
+	rm -rf $CARGO_HOME/registry/src/*/libmimalloc-sys-*
 }

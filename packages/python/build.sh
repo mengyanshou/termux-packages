@@ -4,11 +4,13 @@ TERMUX_PKG_DESCRIPTION="Python 3 programming language intended to enable clear p
 TERMUX_PKG_LICENSE="custom"
 TERMUX_PKG_LICENSE_FILE="LICENSE"
 TERMUX_PKG_MAINTAINER="@termux"
-TERMUX_PKG_VERSION=3.11.8
+TERMUX_PKG_VERSION=3.11.9
+TERMUX_PKG_REVISION=5
 TERMUX_PKG_SRCURL=https://www.python.org/ftp/python/${TERMUX_PKG_VERSION}/Python-${TERMUX_PKG_VERSION}.tar.xz
-TERMUX_PKG_SHA256=9e06008c8901924395bc1da303eac567a729ae012baa182ab39269f650383bb3
+TERMUX_PKG_SHA256=9b1e896523fc510691126c864406d9360a3d1e986acbda59cda57b5abda45b87
 TERMUX_PKG_AUTO_UPDATE=false
 TERMUX_PKG_DEPENDS="gdbm, libandroid-posix-semaphore, libandroid-support, libbz2, libcrypt, libexpat, libffi, liblzma, libsqlite, ncurses, ncurses-ui-libs, openssl, readline, zlib"
+TERMUX_PKG_BUILD_DEPENDS="tk"
 TERMUX_PKG_RECOMMENDS="python-ensurepip-wheels, python-pip"
 TERMUX_PKG_SUGGESTS="python-tkinter"
 TERMUX_PKG_BREAKS="python2 (<= 2.7.15), python-dev"
@@ -17,7 +19,7 @@ TERMUX_PKG_REPLACES="python-dev"
 TERMUX_PKG_PROVIDES="python3"
 
 # https://github.com/termux/termux-packages/issues/15908
-TERMUX_MAKE_PROCESSES=1
+TERMUX_PKG_MAKE_PROCESSES=1
 
 _MAJOR_VERSION="${TERMUX_PKG_VERSION%.*}"
 
@@ -79,12 +81,12 @@ termux_step_pre_configure() {
 
 termux_step_post_make_install() {
 	(cd $TERMUX_PREFIX/bin
-	 ln -sf idle${_MAJOR_VERSION} idle
-	 ln -sf python${_MAJOR_VERSION} python
-	 ln -sf python${_MAJOR_VERSION}-config python-config
-	 ln -sf pydoc${_MAJOR_VERSION} pydoc)
+	ln -sf idle${_MAJOR_VERSION} idle
+	ln -sf python${_MAJOR_VERSION} python
+	ln -sf python${_MAJOR_VERSION}-config python-config
+	ln -sf pydoc${_MAJOR_VERSION} pydoc)
 	(cd $TERMUX_PREFIX/share/man/man1
-	 ln -sf python${_MAJOR_VERSION}.1 python.1)
+	ln -sf python${_MAJOR_VERSION}.1 python.1)
 }
 
 termux_step_post_massage() {

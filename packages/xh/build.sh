@@ -2,15 +2,15 @@ TERMUX_PKG_HOMEPAGE=https://github.com/ducaale/xh
 TERMUX_PKG_DESCRIPTION="A friendly and fast tool for sending HTTP requests"
 TERMUX_PKG_LICENSE="MIT"
 TERMUX_PKG_MAINTAINER="@termux"
-TERMUX_PKG_VERSION="0.21.0"
+TERMUX_PKG_VERSION="0.22.2"
 TERMUX_PKG_SRCURL=https://github.com/ducaale/xh/archive/refs/tags/v${TERMUX_PKG_VERSION}.tar.gz
-TERMUX_PKG_SHA256=7e6b91a46bbbfee3907bf06d224a2e66a92b8f3e3950de43de5f06ce3beaacec
+TERMUX_PKG_SHA256=32a6470ab705aba4c37fce9806202dcc0ed24f55e091e2f4bdf7583108a3da63
 TERMUX_PKG_AUTO_UPDATE=true
 TERMUX_PKG_BUILD_IN_SRC=true
 
 termux_step_make() {
 	termux_setup_rust
-	cargo build --jobs $TERMUX_MAKE_PROCESSES --target $CARGO_TARGET_NAME --release
+	cargo build --jobs $TERMUX_PKG_MAKE_PROCESSES --target $CARGO_TARGET_NAME --release
 }
 
 termux_step_make_install() {
