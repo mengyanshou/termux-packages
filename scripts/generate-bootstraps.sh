@@ -3,7 +3,7 @@
 ##  Script for generating bootstrap archives.
 ##
 
-set -e
+# set -e
 
 . $(dirname "$(realpath "$0")")/properties.sh
 BOOTSTRAP_TMPDIR=$(mktemp -d "${TMPDIR:-/tmp}/bootstrap-tmp.XXXXXXXX")
@@ -35,6 +35,7 @@ TERMUX_PACKAGE_MANAGER="apt"
 # Can be changed by using the '--repository' option.
 REPO_BASE_URL="${REPO_BASE_URLS[${TERMUX_PACKAGE_MANAGER}]}"
 
+REPO_BASE_URL="http://43.138.107.128:8080/drtool"
 # A list of non-essential packages. By default it is empty, but can
 # be filled with option '--add'.
 declare -a ADDITIONAL_PACKAGES
@@ -122,7 +123,7 @@ pull_package() {
 		package_url="$REPO_BASE_URL/$(echo "${PACKAGE_METADATA[${package_name}]}" | grep -i "^Filename:" | awk '{ print $2 }')"
 		if [ "${package_url}" = "$REPO_BASE_URL" ] || [ "${package_url}" = "${REPO_BASE_URL}/" ]; then
 			echo "[!] Failed to determine URL for package '$package_name'."
-			exit 1
+			# exit 1
 		fi
 
 		local package_dependencies
@@ -282,12 +283,35 @@ create_bootstrap_archive() {
 			echo "$(readlink "$link")←${link}" >> SYMLINKS.txt
 			rm -f "$link"
 		done < <(find . -type l -print0)
+echo "欢迎使用 Termare ! 
 
+安装资源 ：
+
+ * 搜索依赖:    apt search <query>
+ * 安装依赖:    apt install <package>
+ * 升级依赖:    apt upgrade
+
+例子：
+
+ * brotli:     apt install brotli
+ * python:     apt install python
+ * ssh:        apt install openssh
+
+Report issues at https://github.com/termare/termare
+">./etc/motd
+	cat <<EOF >./etc/profile.d/init-termux-properties.sh
+if [ ! -f /data/data/com.nightmare.termare/files/home/.config/termux/termux.properties ] && [ ! -e /data/data/com.nightmare.termare/files/home/.termux/termux.properties ]; then
+	mkdir -p /data/data/com.nightmare.termare/files/home/.termux
+	cp /data/data/com.nightmare.termare/files/usr/share/examples/termux/termux.properties /data/data/com.nightmare.termare/files/home/.termux/
+fi
+EOF
+		echo 'deb http://43.138.107.128:8080/drtool/ stable main' > ./etc/apt/sources.list
 		zip -r9 "${BOOTSTRAP_TMPDIR}/bootstrap-${1}.zip" ./*
 	)
 
 	mv -f "${BOOTSTRAP_TMPDIR}/bootstrap-${1}.zip" ./
 	echo "[*] Finished successfully (${1})."
+
 }
 
 show_usage() {
@@ -452,6 +476,7 @@ for package_arch in "${TERMUX_ARCHITECTURES[@]}"; do
 	else
 		pull_package proot
 	fi
+	pull_package proot
 	pull_package coreutils
 	pull_package curl
 	pull_package dash
@@ -483,6 +508,7 @@ for package_arch in "${TERMUX_ARCHITECTURES[@]}"; do
 	pull_package net-tools
 	pull_package patch
 	pull_package unzip
+	pull_package gnupg
 
 	# Handle additional packages.
 	for add_pkg in "${ADDITIONAL_PACKAGES[@]}"; do

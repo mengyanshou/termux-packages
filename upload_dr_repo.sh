@@ -1,5 +1,5 @@
 function make_repo(){
-    mv output/* debs/
+    mv output/* debs/ 2>/dev/null
     cd mirror-helper
     ./make-current-mirror.sh
     cd ..

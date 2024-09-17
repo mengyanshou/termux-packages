@@ -12,6 +12,7 @@ TERMUX_PKG_BUILD_DEPENDS="googletest"
 TERMUX_PKG_EXTRA_CONFIGURE_ARGS="
 -DANDROID_TOOLS_USE_BUNDLED_FMT=ON
 -DANDROID_TOOLS_USE_BUNDLED_LIBUSB=ON
+--enable-static --disable-shared
 "
 
 termux_step_pre_configure() {
